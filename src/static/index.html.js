@@ -184,19 +184,21 @@ export const HTML_CONTENT = `<!DOCTYPE html>
     <footer class="bg-dark text-light py-4 mt-auto">
         <div class="container text-center">
             <p class="mb-2">
-                Powered by 
-                <a href="https://www.discogs.com/developers" target="_blank" class="text-light d-inline-flex align-items-center">
+                <a href="https://www.discogs.com/developers" target="_blank" class="footer-api-link d-inline-flex align-items-center">
                     <span class="discogs-logo-white me-1"></span>
                     Discogs API
-                </a> 
-                & 
-                <a href="https://www.last.fm/api" target="_blank" class="text-light d-inline-flex align-items-center">
+                </a> | 
+                <a href="https://www.last.fm/api" target="_blank" class="footer-api-link d-inline-flex align-items-center">
                     <span class="lastfm-logo-white me-1"></span>
                     Last.fm API
                 </a> | 
-                <a href="https://github.com/russmckendrick/russ-fm-scrobbler" target="_blank" class="text-light">
+                <a href="https://github.com/russmckendrick/russ-fm-scrobbler" target="_blank" class="footer-source-link">
                     <i class="bi bi-github me-1"></i>
                     Source Code
+                </a> | 
+                <a href="https://www.russ.fm/" target="_blank" class="footer-site-link">
+                    <i class="bi bi-globe me-1"></i>
+                    russFM
                 </a>
             </p>
         </div>

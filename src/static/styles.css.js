@@ -313,6 +313,15 @@ a[href*="last.fm"]:hover {
     background-image: var(--discogs-logo-white); /* Keep white logo on hover */
 }
 
+/* Extra specific styling for link-based Discogs button */
+a.btn-outline-secondary {
+    color: white !important;
+}
+
+a.btn-outline-secondary:hover {
+    color: white !important;
+}
+
 .bg-primary {
     background-color: var(--light-navy) !important;
 }
@@ -484,10 +493,60 @@ a[href*="last.fm"]:hover {
     }
 }
 
-/* Footer styling */
+/* Simple Footer styling */
 footer a:hover {
     color: var(--accent-grey) !important;
     text-decoration: none;
+}
+
+/* Footer API links - white text - override brand colors */
+footer .footer-api-link,
+footer .footer-api-link:link,
+footer .footer-api-link:visited,
+footer .footer-api-link:active,
+footer a[href*="discogs.com"].footer-api-link,
+footer a[href*="last.fm"].footer-api-link {
+    color: white !important;
+    text-decoration: none !important;
+    font-weight: bold !important;
+}
+
+footer .footer-api-link:hover,
+footer .footer-api-link:focus,
+footer a[href*="discogs.com"].footer-api-link:hover,
+footer a[href*="last.fm"].footer-api-link:hover {
+    color: var(--accent-grey) !important;
+    text-decoration: none !important;
+    font-weight: bold !important;
+}
+
+/* Footer source code link - no underline */
+.footer-source-link {
+    color: var(--text-light) !important;
+    text-decoration: none !important;
+    font-weight: bold;
+}
+
+.footer-source-link:hover {
+    color: var(--accent-grey) !important;
+    text-decoration: none !important;
+}
+
+/* Footer site link */
+.footer-site-link {
+    color: var(--text-light) !important;
+    text-decoration: none;
+    font-weight: bold;
+}
+
+.footer-site-link:hover {
+    color: var(--accent-grey) !important;
+    text-decoration: none;
+}
+
+/* Make all footer text bold */
+footer p {
+    font-weight: bold;
 }
 
 /* Brand logo styling using CSS pseudo-elements */
