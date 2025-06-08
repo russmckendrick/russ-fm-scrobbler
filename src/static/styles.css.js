@@ -1,4 +1,4 @@
-export const CSS_CONTENT = `/* RUSS FM SCROBBLER - BRUTALIST STYLES */
+export const CSS_CONTENT = `/* RUSS FM SCROBBLER - INSPIRED BY RANDOM.RUSS.FM */
 
 /* CSS RESET & BASE */
 * {
@@ -8,24 +8,27 @@ export const CSS_CONTENT = `/* RUSS FM SCROBBLER - BRUTALIST STYLES */
 }
 
 :root {
-    --bg-color: #000000;
+    --background: #242424;
+    --accent: #e74c3c;
     --text-color: #ffffff;
-    --accent-color: #ff0000;
-    --border-color: #333333;
-    --input-bg: #111111;
-    --button-bg: #222222;
-    --button-hover: #333333;
-    --success-color: #00ff00;
-    --error-color: #ff0000;
-    --warning-color: #ffff00;
+    --card-bg: rgba(255,255,255,0.1);
+    --border-color: rgba(255,255,255,0.1);
+    --input-bg: rgba(255,255,255,0.05);
+    --button-bg: #3498db;
+    --button-hover: #2980b9;
+    --success-color: #27ae60;
+    --error-color: #e74c3c;
+    --warning-color: #f39c12;
+    --shadow: 0 8px 32px rgba(0,0,0,0.4);
+    --text-shadow: 0 2px 4px rgba(0,0,0,0.5);
 }
 
 body {
-    font-family: 'Courier New', 'Monaco', 'Menlo', monospace;
-    background-color: var(--bg-color);
+    font-family: 'Segoe UI', Arial, sans-serif;
+    background: var(--background);
     color: var(--text-color);
-    line-height: 1.4;
-    font-size: 14px;
+    line-height: 1.6;
+    font-size: 16px;
     min-height: 100vh;
     display: flex;
     flex-direction: column;
@@ -33,47 +36,51 @@ body {
 
 /* TYPOGRAPHY */
 h1, h2, h3 {
-    font-weight: bold;
-    text-transform: uppercase;
-    letter-spacing: 1px;
+    font-weight: 600;
+    text-shadow: var(--text-shadow);
 }
 
 h1 {
-    font-size: 24px;
-    margin-bottom: 20px;
+    font-size: 2.5rem;
+    margin-bottom: 1rem;
 }
 
 h2 {
-    font-size: 18px;
-    margin-bottom: 15px;
-    border-bottom: 2px solid var(--accent-color);
-    padding-bottom: 5px;
+    font-size: 2rem;
+    margin-bottom: 1.5rem;
+    color: var(--accent);
 }
 
 h3 {
-    font-size: 16px;
-    margin-bottom: 10px;
+    font-size: 1.5rem;
+    margin-bottom: 1rem;
 }
 
 a {
     color: var(--text-color);
-    text-decoration: underline;
+    text-decoration: none;
+    transition: color 0.3s ease;
 }
 
 a:hover {
-    color: var(--accent-color);
+    color: var(--accent);
 }
 
 /* LAYOUT */
 .container {
     max-width: 1200px;
     margin: 0 auto;
-    padding: 0 20px;
+    padding: 0 2rem;
 }
 
 header {
-    border-bottom: 2px solid var(--border-color);
-    padding: 20px 0;
+    background: rgba(0,0,0,0.2);
+    backdrop-filter: blur(10px);
+    border-bottom: 1px solid var(--border-color);
+    padding: 1.5rem 0;
+    position: sticky;
+    top: 0;
+    z-index: 100;
 }
 
 header .container {
@@ -81,39 +88,48 @@ header .container {
     justify-content: space-between;
     align-items: center;
     flex-wrap: wrap;
-    gap: 20px;
+    gap: 1.5rem;
 }
 
 header h1 a {
     text-decoration: none;
     color: var(--text-color);
+    font-size: 1.8rem;
+    font-weight: 600;
 }
 
 header h1 a:hover {
-    color: var(--accent-color);
+    color: var(--accent);
 }
 
 main {
     flex: 1;
-    padding: 40px 0;
+    padding: 3rem 0;
 }
 
 footer {
-    border-top: 2px solid var(--border-color);
-    padding: 20px 0;
+    background: rgba(0,0,0,0.2);
+    backdrop-filter: blur(10px);
+    border-top: 1px solid var(--border-color);
+    padding: 2rem 0;
     text-align: center;
-    font-size: 12px;
+    font-size: 0.9rem;
+    color: rgba(255,255,255,0.7);
 }
 
 footer p {
-    margin-bottom: 5px;
+    margin-bottom: 0.5rem;
 }
 
 /* SECTIONS */
 section {
-    margin-bottom: 40px;
+    margin-bottom: 3rem;
+    background: var(--card-bg);
+    backdrop-filter: blur(10px);
     border: 1px solid var(--border-color);
-    padding: 20px;
+    border-radius: 1rem;
+    padding: 2rem;
+    box-shadow: var(--shadow);
 }
 
 /* USER STATUS */
@@ -130,38 +146,47 @@ section {
 
 /* BUTTONS */
 .btn {
-    background-color: var(--button-bg);
+    background: var(--button-bg);
     color: var(--text-color);
-    border: 1px solid var(--border-color);
-    padding: 10px 15px;
+    border: none;
+    padding: 0.75rem 1.5rem;
     font-family: inherit;
-    font-size: 12px;
-    text-transform: uppercase;
+    font-size: 1rem;
+    font-weight: 500;
+    border-radius: 0.5rem;
     cursor: pointer;
-    transition: background-color 0.2s;
+    transition: all 0.3s ease;
+    box-shadow: var(--shadow);
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 0.5rem;
 }
 
 .btn:hover {
-    background-color: var(--button-hover);
+    background: var(--button-hover);
+    transform: translateY(-2px);
+    box-shadow: 0 12px 40px rgba(0,0,0,0.5);
 }
 
 .btn:active {
-    background-color: var(--accent-color);
+    transform: translateY(0);
 }
 
 .btn-primary {
-    background-color: var(--accent-color);
-    color: var(--bg-color);
-    font-weight: bold;
+    background: var(--accent);
+    color: white;
+    font-weight: 600;
 }
 
 .btn-primary:hover {
-    background-color: #cc0000;
+    background: #c0392b;
 }
 
 .btn:disabled {
-    opacity: 0.5;
+    opacity: 0.6;
     cursor: not-allowed;
+    transform: none;
 }
 
 /* FORMS */
@@ -198,52 +223,62 @@ section {
 }
 
 input[type="text"] {
-    background-color: var(--input-bg);
+    background: var(--input-bg);
     color: var(--text-color);
     border: 1px solid var(--border-color);
-    padding: 12px;
+    border-radius: 0.5rem;
+    padding: 0.75rem 1rem;
     font-family: inherit;
-    font-size: 14px;
+    font-size: 1rem;
     width: 100%;
+    transition: all 0.3s ease;
+    backdrop-filter: blur(10px);
 }
 
 input[type="text"]:focus {
     outline: none;
-    border-color: var(--accent-color);
+    border-color: var(--accent);
+    box-shadow: 0 0 0 3px rgba(231, 76, 60, 0.1);
+    background: rgba(255,255,255,0.1);
 }
 
 input[type="text"]::placeholder {
-    color: #666666;
+    color: rgba(255,255,255,0.5);
 }
 
 /* STATUS MESSAGES */
 .status-message {
-    margin-top: 15px;
-    padding: 10px;
+    margin-top: 1rem;
+    padding: 1rem;
+    border-radius: 0.5rem;
+    font-weight: 500;
+    font-size: 0.9rem;
+    backdrop-filter: blur(10px);
     border: 1px solid var(--border-color);
-    font-weight: bold;
-    text-transform: uppercase;
-    font-size: 12px;
 }
 
 .status-message.success {
-    background-color: var(--success-color);
-    color: var(--bg-color);
+    background: rgba(39, 174, 96, 0.2);
+    color: #2ecc71;
+    border-color: rgba(39, 174, 96, 0.3);
 }
 
 .status-message.error {
-    background-color: var(--error-color);
-    color: var(--text-color);
+    background: rgba(231, 76, 60, 0.2);
+    color: #e74c3c;
+    border-color: rgba(231, 76, 60, 0.3);
 }
 
 .status-message.warning {
-    background-color: var(--warning-color);
-    color: var(--bg-color);
+    background: rgba(243, 156, 18, 0.2);
+    color: #f39c12;
+    border-color: rgba(243, 156, 18, 0.3);
 }
 
 .status-message.loading {
-    background-color: var(--button-bg);
-    color: var(--text-color);
+    background: rgba(52, 152, 219, 0.2);
+    color: #3498db;
+    border-color: rgba(52, 152, 219, 0.3);
 }
 
 /* RESULTS */
