@@ -7,6 +7,9 @@ class ScrobblerApp {
         this.selectedAlbum = null;
         this.currentPage = 1;
         this.totalPages = 1;
+        this.exampleSearches = [];
+        this.currentDiscogsSuggestion = null;
+        this.currentAlbumSuggestion = null;
         
         this.init();
     }
@@ -14,9 +17,11 @@ class ScrobblerApp {
     init() {
         this.bindEvents();
         this.checkAuthStatus();
+        this.fetchExampleSearches();
         
         // Handle direct album URLs after everything is initialized
         this.handleDirectAlbumURL();
+        this.fetchExampleSearches();
     }
 
     bindEvents() {
@@ -34,6 +39,14 @@ class ScrobblerApp {
         });
         document.getElementById('album-name').addEventListener('keypress', (e) => {
             if (e.key === 'Enter') this.performAlbumSearch();
+        });
+        
+        // Clear suggestions when user types in the input fields
+        document.getElementById('release-id').addEventListener('input', () => {
+            this.currentDiscogsSuggestion = null;
+        });
+        document.getElementById('album-name').addEventListener('input', () => {
+            this.currentAlbumSuggestion = null;
         });
 
         // Album actions
@@ -174,7 +187,7 @@ class ScrobblerApp {
         
         if (this.currentUser && this.currentUser.lastAlbumArt) {
             // Use the album artwork as background - larger and more prominent
-            userHeader.style.backgroundImage = \`url('\${this.currentUser.lastAlbumArt}')\`;
+            userHeader.style.backgroundImage = "url('" + this.currentUser.lastAlbumArt + "')";
             userHeader.style.backgroundSize = 'auto 120%'; // Make it larger than the container
             userHeader.style.backgroundRepeat = 'no-repeat';
             userHeader.style.backgroundPosition = 'right center';
@@ -188,13 +201,20 @@ class ScrobblerApp {
     }
 
     async refreshAlbumArtwork() {
+        if (!this.currentUser) {
+            this.showStatus('error', 'Please log in to refresh artwork');
+            return;
+        }
+        
         try {
+            this.showStatus('loading', 'Refreshing album artwork...');
+            
             const response = await fetch('/api/auth/refresh-artwork', { method: 'POST' });
             const data = await response.json();
             
             if (response.ok && data.success) {
-                // Update the current user data
-                this.currentUser.lastAlbumArt = data.lastAlbumArt;
+                // Update the user object with new artwork
+                this.currentUser.lastAlbumArt = data.lastAlbumArt || null;
                 
                 // Update the background
                 this.updateHeaderBackground();
@@ -207,6 +227,30 @@ class ScrobblerApp {
             console.error('Failed to refresh artwork:', error);
             this.showStatus('error', 'Failed to refresh artwork');
         }
+    }
+    
+    async fetchExampleSearches() {
+        try {
+            const response = await fetch('/api/config/example-searches');
+            if (response.ok) {
+                this.exampleSearches = await response.json();
+                console.log('Loaded example searches:', this.exampleSearches.length);
+            } else {
+                console.error('Failed to load example searches');
+                this.exampleSearches = [];
+            }
+        } catch (error) {
+            console.error('Error loading example searches:', error);
+            this.exampleSearches = [];
+        }
+    }
+    
+    getRandomExampleSearch() {
+        if (!this.exampleSearches || this.exampleSearches.length === 0) {
+            return null;
+        }
+        const randomIndex = Math.floor(Math.random() * this.exampleSearches.length);
+        return this.exampleSearches[randomIndex];
     }
 
     async login() {
@@ -273,8 +317,50 @@ class ScrobblerApp {
         const searchBtn = document.getElementById('discogs-search-btn');
         
         if (!input) {
-            this.showStatus('error', 'Please enter a Discogs release ID or URL');
-            return;
+            if (this.currentDiscogsSuggestion) {
+                // User clicked search again with empty input after seeing a suggestion
+                document.getElementById('release-id').value = this.currentDiscogsSuggestion.discogs_release_id;
+                const releaseId = this.currentDiscogsSuggestion.discogs_release_id.toString();
+                this.currentDiscogsSuggestion = null; // Clear suggestion since we're using it
+                
+                // Continue with the search using the suggested release ID
+                try {
+                    this.setButtonLoading(searchBtn, 'Loading');
+                    this.showStatus('loading', 'Searching Discogs database...');
+                    
+                    const response = await fetch("/api/search/discogs/release/" + releaseId);
+                    const data = await response.json();
+                    
+                    if (response.ok) {
+                        this.selectedAlbum = data;
+                        this.displayFullAlbumPage();
+                        
+                        window.history.pushState({albumData: data}, data.title, "/albums/" + releaseId + "/");
+                        document.title = data.title + " - RUSS FM SCROBBLER";
+                    } else {
+                        this.showStatus('error', data.error || 'Album not found');
+                    }
+                } catch (error) {
+                    console.error('Failed to load album:', error);
+                    this.showStatus('error', 'Failed to load album');
+                } finally {
+                    this.setButtonNormal(searchBtn, '<span class="discogs-logo-white me-2"></span>Search Discogs');
+                }
+                return;
+            } else {
+                // First click with empty input - show a suggestion
+                const randomExample = this.getRandomExampleSearch();
+                if (randomExample) {
+                    this.currentDiscogsSuggestion = randomExample;
+                    this.showStatus('warning', 'Please enter a Discogs release ID or URL, or search again for: "' + randomExample.album_name + '" by ' + randomExample.artist_name + ' (Release ID: ' + randomExample.discogs_release_id + ')');
+                } else {
+                    this.showStatus('error', 'Please enter a Discogs release ID or URL');
+                }
+                return;
+            }
+        } else {
+            // User entered something, clear any suggestion
+            this.currentDiscogsSuggestion = null;
         }
         
         // Parse the input to extract release ID
@@ -316,8 +402,57 @@ class ScrobblerApp {
         const searchBtn = document.getElementById('album-search-btn');
         
         if (!album) {
-            this.showStatus('error', 'Please enter an album name');
-            return;
+            if (this.currentAlbumSuggestion) {
+                // User clicked search again with empty input after seeing a suggestion
+                document.getElementById('album-name').value = this.currentAlbumSuggestion.album_name;
+                const albumName = this.currentAlbumSuggestion.album_name;
+                this.currentAlbumSuggestion = null; // Clear suggestion since we're using it
+                
+                // Continue with the search using the suggested album name
+                try {
+                    this.setButtonLoading(searchBtn, 'Searching');
+                    this.showStatus('loading', 'Searching Last.fm database...');
+                    
+                    const searchParams = {
+                        album: albumName,
+                        page: page
+                    };
+                    
+                    const queryString = new URLSearchParams(searchParams).toString();
+                    const response = await fetch("/api/search/lastfm?" + queryString);
+                    const data = await response.json();
+                    
+                    if (response.ok) {
+                        this.searchResults = data.results || [];
+                        this.currentPage = (data.pagination && data.pagination.page) || 1;
+                        this.totalPages = (data.pagination && data.pagination.pages) || 1;
+                        
+                        this.displaySearchResults();
+                        this.showStatus('success', "Found " + this.searchResults.length + " results");
+                    } else {
+                        this.showStatus('error', data.error || 'Search failed');
+                    }
+                } catch (error) {
+                    console.error('Search failed:', error);
+                    this.showStatus('error', 'Search failed');
+                } finally {
+                    this.setButtonNormal(searchBtn, '<span class="lastfm-logo-white me-2"></span>Search Albums');
+                }
+                return;
+            } else {
+                // First click with empty input - show a suggestion
+                const randomExample = this.getRandomExampleSearch();
+                if (randomExample) {
+                    this.currentAlbumSuggestion = randomExample;
+                    this.showStatus('warning', 'Please enter an album name, or search again for: "' + randomExample.album_name + '" by ' + randomExample.artist_name);
+                } else {
+                    this.showStatus('error', 'Please enter an album name');
+                }
+                return;
+            }
+        } else {
+            // User entered something, clear any suggestion
+            this.currentAlbumSuggestion = null;
         }
 
         const searchParams = {
@@ -567,7 +702,7 @@ class ScrobblerApp {
                     <div class="container">
                         <ol class="breadcrumb">
                             <li class="breadcrumb-item"><a href="/">Search</a></li>
-                            <li class="breadcrumb-item">\${this.selectedAlbum.artists ? this.selectedAlbum.artists[0].name : 'Unknown Artist'}</li>
+                            <li class="breadcrumb-item artist-name">\${this.selectedAlbum.artists ? this.selectedAlbum.artists[0].name : 'Unknown Artist'}</li>
                             <li class="breadcrumb-item active" aria-current="page">\${this.selectedAlbum.title}</li>
                         </ol>
                         <div class="data-source">Data source: \${this.selectedAlbum.id && String(this.selectedAlbum.id).startsWith('lastfm-') ? 'Last.fm' : 'Discogs'}</div>

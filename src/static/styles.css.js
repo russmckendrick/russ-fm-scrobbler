@@ -677,8 +677,15 @@ footer p {
     color: #ffffff;
 }
 
+/* Artist name (second item) in breadcrumb */
+.breadcrumb-item.artist-name {
+    color: var(--discogs-dark);
+    font-size: 0.9rem; /* Match the breadcrumb font size */
+}
+
+/* Album name (third/active item) in breadcrumb */
 .breadcrumb-item.active {
-    color: var(--accent-grey);
+    color: var(--lastfm-red);
 }
 
 /* Album Page Layout */

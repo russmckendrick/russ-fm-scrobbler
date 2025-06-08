@@ -2,6 +2,7 @@ import { handleAuth } from './handlers/auth.js';
 import { handleSearch } from './handlers/search.js';
 import { handleScrobble } from './handlers/scrobble.js';
 import { getStaticAsset } from './utils/static.js';
+import exampleSearches from './config/example_searches.json';
 
 export default {
   async fetch(request, env, ctx) {
@@ -49,6 +50,15 @@ export default {
           response = await handleSearch(request, env, path);
         } else if (path.startsWith('/api/scrobble/')) {
           response = await handleScrobble(request, env, path);
+        } else if (path === '/api/config/example-searches') {
+          const jsonResponse = Response.json(exampleSearches, {
+            headers: { 'Content-Type': 'application/json; charset=utf-8' }
+          });
+          // Apply common CORS headers
+          Object.entries(responseCorsHeaders).forEach(([key, value]) => {
+            jsonResponse.headers.set(key, value);
+          });
+          return jsonResponse;
         } else {
           response = new Response('API endpoint not found', { status: 404 });
         }
