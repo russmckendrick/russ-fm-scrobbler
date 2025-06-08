@@ -368,6 +368,17 @@ class ScrobblerApp {
         
         // Create a new album page container
         const albumPageHTML = \`
+            <!-- Breadcrumbs -->
+            <nav aria-label="breadcrumb" class="mb-4">
+                <ol class="breadcrumb">
+                    <li class="breadcrumb-item"><a href="/">Home</a></li>
+                    <li class="breadcrumb-item"><a href="/">Albums</a></li>
+                    <li class="breadcrumb-item active" aria-current="page">
+                        \${this.selectedAlbum.artists ? this.selectedAlbum.artists[0].name + ' - ' : ''}\${this.selectedAlbum.title}
+                    </li>
+                </ol>
+            </nav>
+            
             <div class="row justify-content-center">
                 <div class="col-12 col-md-8 col-lg-6">
                     <!-- Album Cover -->

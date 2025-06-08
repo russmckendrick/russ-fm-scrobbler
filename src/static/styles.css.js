@@ -280,4 +280,30 @@ footer a:hover {
     color: var(--accent-grey) !important;
     text-decoration: none;
 }
+
+/* Breadcrumb styling */
+.breadcrumb {
+    background-color: transparent;
+    padding: 0;
+    margin-bottom: 1rem;
+}
+
+.breadcrumb-item + .breadcrumb-item::before {
+    content: "/";
+    color: var(--accent-grey);
+}
+
+.breadcrumb-item a {
+    color: var(--accent-grey);
+    text-decoration: none;
+    transition: color 0.2s ease;
+}
+
+.breadcrumb-item a:hover {
+    color: #ffffff;
+}
+
+.breadcrumb-item.active {
+    color: var(--accent-grey);
+}
 `; 
