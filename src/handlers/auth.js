@@ -53,8 +53,25 @@ async function handleAuthStatus(request, env) {
 
 async function handleLogin(request, env) {
   try {
+    // Debug: Check if API key is available
+    console.log('LASTFM_API_KEY available:', !!env.LASTFM_API_KEY);
+    console.log('LASTFM_API_KEY value:', env.LASTFM_API_KEY ? 'SET' : 'UNDEFINED');
+    
+    if (!env.LASTFM_API_KEY) {
+      return Response.json({ 
+        error: 'Last.fm API key not configured. Please set LASTFM_API_KEY secret.' 
+      }, { status: 500 });
+    }
+    
     const sessionId = generateSessionId();
-    const authUrl = createAuthUrl(env.LASTFM_API_KEY);
+    
+    // Get the current origin for the callback URL
+    const url = new URL(request.url);
+    const callbackUrl = `${url.origin}/`;
+    
+    console.log('Creating auth URL with callback:', callbackUrl);
+    const authUrl = createAuthUrl(env.LASTFM_API_KEY, callbackUrl);
+    console.log('Generated auth URL:', authUrl);
     
     // Store temporary session for callback verification
     await env.SESSIONS.put(sessionId, JSON.stringify({
@@ -64,10 +81,13 @@ async function handleLogin(request, env) {
     
     const response = Response.json({ authUrl });
     
-    // Set session cookie
-    response.headers.set('Set-Cookie', 
-      `session_id=${sessionId}; Path=/; HttpOnly; Secure; SameSite=Strict; Max-Age=86400`
-    );
+    // Set session cookie (adjust for localhost)
+    const isLocalhost = url.hostname === 'localhost' || url.hostname === '127.0.0.1';
+    const cookieOptions = isLocalhost 
+      ? `session_id=${sessionId}; Path=/; HttpOnly; SameSite=Strict; Max-Age=86400`
+      : `session_id=${sessionId}; Path=/; HttpOnly; Secure; SameSite=Strict; Max-Age=86400`;
+    
+    response.headers.set('Set-Cookie', cookieOptions);
     
     return response;
   } catch (error) {

@@ -4,11 +4,11 @@ export function generateSessionId() {
   return CryptoJS.lib.WordArray.random(16).toString();
 }
 
-export function createAuthUrl(apiKey) {
+export function createAuthUrl(apiKey, callbackUrl) {
   const baseUrl = 'https://www.last.fm/api/auth/';
   const params = new URLSearchParams({
     api_key: apiKey,
-    cb: 'https://scrobbler.russ.fm/'
+    cb: callbackUrl
   });
   
   return `${baseUrl}?${params.toString()}`;
