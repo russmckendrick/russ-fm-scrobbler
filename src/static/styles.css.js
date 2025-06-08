@@ -351,23 +351,44 @@ a.btn-outline-secondary:hover {
     border-color: var(--dark-navy);
 }
 
-/* Loading animation for buttons */
+/* Loading animation for buttons - using animated dots instead of spinner */
 .loading {
-    position: relative;
+    pointer-events: none;
 }
 
-.loading::after {
+.loading-dots::after {
     content: '';
-    position: absolute;
-    top: 50%;
-    right: 1rem;
-    width: 1rem;
-    height: 1rem;
-    border: 2px solid rgba(255,255,255,0.3);
-    border-top: 2px solid var(--dark-navy);
-    border-radius: 50%;
-    animation: spin 1s linear infinite;
-    transform: translateY(-50%);
+    animation: dots 1.5s steps(4, end) infinite;
+}
+
+@keyframes dots {
+    0%, 20% {
+        content: '';
+    }
+    40% {
+        content: '.';
+    }
+    60% {
+        content: '..';
+    }
+    80%, 100% {
+        content: '...';
+    }
+}
+
+
+
+/* Temporary success state for buttons */
+.btn-success-temp {
+    background-color: #28a745 !important;
+    border-color: #28a745 !important;
+    color: white !important;
+    transition: all 0.3s ease;
+}
+
+.btn-success-temp:hover {
+    background-color: #218838 !important;
+    border-color: #1e7e34 !important;
 }
 
 /* Album result cards */
@@ -407,6 +428,33 @@ a.btn-outline-secondary:hover {
 /* Status messages */
 .alert {
     border-radius: 0.5rem;
+    border: none;
+    font-weight: 500;
+    box-shadow: 0 0.125rem 0.25rem rgba(0,0,0,0.075);
+}
+
+.alert-info {
+    background-color: #d1ecf1;
+    color: #0c5460;
+    border-left: 4px solid #17a2b8;
+}
+
+.alert-success {
+    background-color: #d4edda;
+    color: #155724;
+    border-left: 4px solid #28a745;
+}
+
+.alert-danger {
+    background-color: #f8d7da;
+    color: #721c24;
+    border-left: 4px solid #dc3545;
+}
+
+.alert-warning {
+    background-color: #fff3cd;
+    color: #856404;
+    border-left: 4px solid #ffc107;
 }
 
 /* Responsive adjustments */

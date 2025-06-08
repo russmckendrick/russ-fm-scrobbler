@@ -285,9 +285,8 @@ class ScrobblerApp {
         }
         
         try {
-            searchBtn.disabled = true;
-            searchBtn.classList.add('loading');
-            this.showStatus('loading', 'Loading album...');
+            this.setButtonLoading(searchBtn, 'Loading');
+            this.showStatus('loading', 'Searching Discogs database...');
 
             const response = await fetch(\`/api/search/discogs/release/\${releaseId}\`);
             const data = await response.json();
@@ -308,8 +307,7 @@ class ScrobblerApp {
             console.error('Failed to load album:', error);
             this.showStatus('error', 'Failed to load album');
         } finally {
-            searchBtn.disabled = false;
-            searchBtn.classList.remove('loading');
+            this.setButtonNormal(searchBtn, '<span class="discogs-logo-white me-2"></span>Search Discogs');
         }
     }
 
@@ -328,9 +326,8 @@ class ScrobblerApp {
         };
 
         try {
-            searchBtn.disabled = true;
-            searchBtn.classList.add('loading');
-            this.showStatus('loading', 'Searching...');
+            this.setButtonLoading(searchBtn, 'Searching');
+            this.showStatus('loading', 'Searching Last.fm database...');
 
             const queryString = new URLSearchParams(searchParams).toString();
             const response = await fetch(\`/api/search/lastfm?\${queryString}\`);
@@ -350,8 +347,7 @@ class ScrobblerApp {
             console.error('Search failed:', error);
             this.showStatus('error', 'Search failed');
         } finally {
-            searchBtn.disabled = false;
-            searchBtn.classList.remove('loading');
+            this.setButtonNormal(searchBtn, '<span class="lastfm-logo-white me-2"></span>Search Albums');
         }
     }
 
@@ -694,7 +690,16 @@ class ScrobblerApp {
         const track = this.selectedAlbum.tracklist[trackIndex];
         if (!track || track.type_ !== 'track') return;
 
+        // Find the track button
+        const trackButtons = document.querySelectorAll('.track-scrobble-btn');
+        const trackButton = trackButtons[trackIndex];
+
         try {
+            if (trackButton) {
+                this.setButtonLoading(trackButton, 'Scrobbling');
+            }
+            this.showAlbumStatus('loading', \`Scrobbling "\${track.title}"...\`);
+
             const scrobbleData = {
                 artist: this.selectedAlbum.artists ? this.selectedAlbum.artists[0].name : 'Unknown Artist',
                 track: track.title,
@@ -711,13 +716,25 @@ class ScrobblerApp {
             const data = await response.json();
 
             if (response.ok) {
-                this.showAlbumStatus('success', \`Scrobbled: \${track.title}\`);
+                this.showAlbumStatus('success', \`✓ Successfully scrobbled "\${track.title}"\`);
+                if (trackButton) {
+                    this.setButtonSuccess(trackButton, '✓ Scrobbled');
+                    setTimeout(() => {
+                        this.setButtonNormal(trackButton, 'Scrobble');
+                    }, 2000);
+                }
             } else {
                 this.showAlbumStatus('error', data.error || 'Scrobble failed');
+                if (trackButton) {
+                    this.setButtonNormal(trackButton, 'Scrobble');
+                }
             }
         } catch (error) {
             console.error('Scrobble failed:', error);
             this.showAlbumStatus('error', 'Scrobble failed');
+            if (trackButton) {
+                this.setButtonNormal(trackButton, 'Scrobble');
+            }
         }
     }
 
@@ -738,12 +755,11 @@ class ScrobblerApp {
             return;
         }
 
+        const scrobbleBtn = document.getElementById('scrobble-album-btn');
+        
         try {
-            const scrobbleBtn = document.getElementById('scrobble-album-btn');
-            scrobbleBtn.disabled = true;
-            scrobbleBtn.classList.add('loading');
-
-            this.showAlbumStatus('loading', \`Scrobbling \${tracks.length} tracks...\`);
+            this.setButtonLoading(scrobbleBtn, 'Scrobbling');
+            this.showAlbumStatus('loading', \`Preparing to scrobble \${tracks.length} tracks from "\${this.selectedAlbum.title}"...\`);
 
             const albumData = {
                 artist: this.selectedAlbum.artists ? this.selectedAlbum.artists[0].name : 'Unknown Artist',
@@ -763,19 +779,21 @@ class ScrobblerApp {
             const data = await response.json();
 
             if (response.ok) {
-                this.showAlbumStatus('success', \`Successfully scrobbled \${tracks.length} tracks!\`);
+                this.showAlbumStatus('success', \`🎵 Successfully scrobbled all \${tracks.length} tracks from "\${this.selectedAlbum.title}"!\`);
+                this.setButtonSuccess(scrobbleBtn, '✓ Album Scrobbled');
+                
+                // Reset button after 3 seconds
+                setTimeout(() => {
+                    this.setButtonNormal(scrobbleBtn, '<span class="lastfm-logo-white me-2"></span>Scrobble album');
+                }, 3000);
             } else {
                 this.showAlbumStatus('error', data.error || 'Album scrobble failed');
+                this.setButtonNormal(scrobbleBtn, '<span class="lastfm-logo-white me-2"></span>Scrobble album');
             }
         } catch (error) {
             console.error('Album scrobble failed:', error);
             this.showAlbumStatus('error', 'Album scrobble failed');
-        } finally {
-            const scrobbleBtn = document.getElementById('scrobble-album-btn');
-            if (scrobbleBtn) {
-                scrobbleBtn.disabled = false;
-                scrobbleBtn.classList.remove('loading');
-            }
+            this.setButtonNormal(scrobbleBtn, '<span class="lastfm-logo-white me-2"></span>Scrobble album');
         }
     }
 
@@ -814,6 +832,44 @@ class ScrobblerApp {
         }
     }
 
+    // Button state management helpers
+    setButtonLoading(button, text = 'Loading') {
+        if (!button) return;
+        
+        button.disabled = true;
+        button.classList.add('loading');
+        
+        // Store original content
+        if (!button.dataset.originalContent) {
+            button.dataset.originalContent = button.innerHTML;
+        }
+        
+        button.innerHTML = \`\${text}<span class="loading-dots"></span>\`;
+    }
+
+    setButtonNormal(button, content = null) {
+        if (!button) return;
+        
+        button.disabled = false;
+        button.classList.remove('loading', 'btn-success-temp');
+        
+        // Restore original content or use provided content
+        if (content) {
+            button.innerHTML = content;
+        } else if (button.dataset.originalContent) {
+            button.innerHTML = button.dataset.originalContent;
+        }
+    }
+
+    setButtonSuccess(button, text = 'Success') {
+        if (!button) return;
+        
+        button.disabled = false;
+        button.classList.remove('loading');
+        button.classList.add('btn-success-temp');
+        button.innerHTML = \`<span class="btn-text">\${text}</span>\`;
+    }
+
     handleDirectAlbumURL() {
         // Check if we're on a direct album URL like /albums/34201738/
         const path = window.location.pathname;
@@ -843,7 +899,7 @@ class ScrobblerApp {
     async loadAlbumDirectly(releaseId) {
         try {
             console.log('Loading album directly for release ID:', releaseId);
-            this.showStatus('loading', 'Loading album...');
+            this.showStatus('loading', 'Loading album from Discogs...');
 
             // Get detailed album information directly
             const response = await fetch(\`/api/search/discogs/release/\${releaseId}\`);
