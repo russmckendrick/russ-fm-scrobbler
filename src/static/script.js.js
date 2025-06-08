@@ -368,123 +368,75 @@ class ScrobblerApp {
         
         // Create a new album page container
         const albumPageHTML = \`
-            <div class="container mt-4">
+            <div class="album-page-container">
                 <!-- Breadcrumbs -->
-                <nav aria-label="breadcrumb" class="mb-4">
-                    <ol class="breadcrumb">
-                        <li class="breadcrumb-item"><a href="/">Home</a></li>
-                        <li class="breadcrumb-item"><a href="/">Albums</a></li>
-                        <li class="breadcrumb-item active" aria-current="page">\${this.selectedAlbum.title}</li>
-                    </ol>
+                <nav aria-label="breadcrumb" class="breadcrumb-nav">
+                    <div class="container">
+                        <ol class="breadcrumb">
+                            <li class="breadcrumb-item"><a href="/">Search</a></li>
+                            <li class="breadcrumb-item">\${this.selectedAlbum.artists ? this.selectedAlbum.artists[0].name : 'Unknown Artist'}</li>
+                            <li class="breadcrumb-item active" aria-current="page">\${this.selectedAlbum.title}</li>
+                        </ol>
+                        <div class="data-source">Data source: Discogs</div>
+                    </div>
                 </nav>
-                <div class="row justify-content-center">
-                    <div class="col-12 col-md-8 col-lg-6">
-                        <!-- Album Cover -->
-                    <img src="\${this.selectedAlbum.images && this.selectedAlbum.images[0] ? this.selectedAlbum.images[0].uri : '/placeholder-album.jpg'}" 
-                         alt="\${this.selectedAlbum.title}" 
-                         class="img-fluid rounded shadow-lg mb-4 w-100">
-                    
-                    <!-- Artist/Genre/Style Badges -->
-                    <div class="d-flex flex-wrap mb-4">
-                        \${this.selectedAlbum.artists ? this.selectedAlbum.artists.map(artist => \`
-                            <div class="d-flex align-items-center p-1">
-                                <div class="d-flex">
-                                    <span class="bg-primary text-white small px-2 py-1 rounded-start">Artist</span>
-                                    <span class="bg-secondary text-white small px-2 py-1 rounded-end">\${artist.name}</span>
-                                </div>
-                            </div>
-                        \`).join('') : ''}
-                        
-                        \${this.selectedAlbum.genres ? this.selectedAlbum.genres.map(genre => \`
-                            <div class="d-flex align-items-center p-1">
-                                <div class="d-flex">
-                                    <span class="bg-primary text-white small px-2 py-1 rounded-start">Genre</span>
-                                    <span class="bg-secondary text-white small px-2 py-1 rounded-end">\${genre}</span>
-                                </div>
-                            </div>
-                        \`).join('') : ''}
-                        
-                        \${this.selectedAlbum.styles ? this.selectedAlbum.styles.map(style => \`
-                            <div class="d-flex align-items-center p-1">
-                                <div class="d-flex">
-                                    <span class="bg-primary text-white small px-2 py-1 rounded-start">Style</span>
-                                    <span class="bg-secondary text-white small px-2 py-1 rounded-end">\${style}</span>
-                                </div>
-                            </div>
-                        \`).join('') : ''}
-                    </div>
 
-                    <!-- Scrobble Button -->
-                    <button id="scrobble-album-btn" class="btn btn-danger btn-block mb-4 w-100">
-                        <i class="bi bi-file-music-fill me-2"></i>
-                        Scrobble "\${this.selectedAlbum.title}" to Last.fm
-                    </button>
+                <div class="container album-content">
+                    <div class="row">
+                        <!-- Left Column: Album Info -->
+                        <div class="col-lg-4 col-md-5">
+                            <div class="album-info-card">
+                                <!-- Album Cover -->
+                                <img src="\${this.selectedAlbum.images && this.selectedAlbum.images[0] ? this.selectedAlbum.images[0].uri : '/placeholder-album.jpg'}" 
+                                     alt="\${this.selectedAlbum.title}" 
+                                     class="album-cover">
+                                
+                                <!-- Album Details -->
+                                <div class="album-details">
+                                    <h1 class="album-title">\${this.selectedAlbum.title}</h1>
+                                    <h2 class="artist-name">\${this.selectedAlbum.artists ? this.selectedAlbum.artists[0].name : 'Unknown Artist'}</h2>
+                                    <div class="album-year">\${this.selectedAlbum.year || 'Unknown'}</div>
+                                    \${this.selectedAlbum.formats ? \`<div class="album-format">\${this.selectedAlbum.formats.map(f => f.name).join(', ')}</div>\` : ''}
+                                </div>
 
-                    <!-- Album Information -->
-                    <div class="card mb-4">
-                        <div class="card-header">
-                            <h3 class="mb-0">\${this.selectedAlbum.title}</h3>
-                            <p class="text-muted mb-0">by \${this.selectedAlbum.artists ? this.selectedAlbum.artists.map(a => a.name).join(', ') : 'Various Artists'}</p>
-                        </div>
-                        <div class="card-body">
-                            <div class="row g-3">
-                                \${this.selectedAlbum.year ? \`
-                                    <div class="col-sm-6">
-                                        <strong>Year:</strong> \${this.selectedAlbum.year}
-                                    </div>
-                                \` : ''}
-                                \${this.selectedAlbum.formats ? \`
-                                    <div class="col-sm-6">
-                                        <strong>Format:</strong> \${this.selectedAlbum.formats.map(f => f.name).join(', ')}
-                                    </div>
-                                \` : ''}
-                                \${this.selectedAlbum.labels ? \`
-                                    <div class="col-sm-6">
-                                        <strong>Label:</strong> \${this.selectedAlbum.labels.map(l => l.name).join(', ')}
-                                    </div>
-                                \` : ''}
-                                \${this.selectedAlbum.country ? \`
-                                    <div class="col-sm-6">
-                                        <strong>Country:</strong> \${this.selectedAlbum.country}
-                                    </div>
-                                \` : ''}
+                                <!-- Scrobble Buttons -->
+                                <div class="scrobble-actions">
+                                    <button id="scrobble-album-btn" class="btn btn-success btn-lg w-100 mb-3">
+                                        Scrobble album
+                                    </button>
+                                </div>
                             </div>
                         </div>
-                    </div>
 
-                    <!-- Track List -->
-                    \${this.selectedAlbum.tracklist && this.selectedAlbum.tracklist.length > 0 ? \`
-                        <div class="card mb-4">
-                            <div class="card-header">
-                                <h5 class="mb-0">
-                                    <i class="bi bi-music-note-list me-2"></i>
-                                    Track List
-                                </h5>
-                            </div>
-                            <div class="card-body p-0">
-                                \${this.selectedAlbum.tracklist.map((track, index) => {
-                                    if (track.type_ === 'track') {
-                                        return \`
-                                            <div class="track-item d-flex align-items-center justify-content-between">
-                                                <div class="d-flex align-items-center flex-grow-1">
-                                                    <span class="badge bg-secondary me-3">\${track.position || (index + 1)}</span>
-                                                    <span class="fw-medium">\${track.title}</span>
-                                                    \${track.duration ? \`<span class="text-muted ms-auto me-3">(\${track.duration})</span>\` : ''}
+                        <!-- Right Column: Track List -->
+                        <div class="col-lg-8 col-md-7">
+
+                            \${this.selectedAlbum.tracklist && this.selectedAlbum.tracklist.length > 0 ? \`
+                                <div class="track-list-container">
+                                    \${this.selectedAlbum.tracklist.map((track, index) => {
+                                        if (track.type_ === 'track') {
+                                            return \`
+                                                <div class="track-row">
+                                                    <div class="track-info">
+                                                        <span class="track-number">\${track.position || (index + 1)}</span>
+                                                        <span class="track-title">\${track.title}</span>
+                                                        \${track.duration ? \`<span class="track-duration">\${track.duration}</span>\` : ''}
+                                                    </div>
+                                                    <button class="btn btn-success btn-sm track-scrobble-btn" onclick="app.scrobbleTrack(\${index})">
+                                                        Scrobble
+                                                    </button>
                                                 </div>
-                                                <button class="btn btn-primary btn-sm" onclick="app.scrobbleTrack(\${index})">
-                                                    <i class="bi bi-music-note me-1"></i>Scrobble
-                                                </button>
-                                            </div>
-                                        \`;
-                                    }
-                                    return '';
-                                }).join('')}
-                            </div>
+                                            \`;
+                                        }
+                                        return '';
+                                    }).join('')}
+                                </div>
+                            \` : ''}
                         </div>
-                    \` : ''}
+                    </div>
 
                     <!-- Back Button -->
-                    <div class="text-center">
+                    <div class="back-button-container">
                         <button id="back-to-search" class="btn btn-secondary">
                             <i class="bi bi-arrow-left me-1"></i>
                             Back to Search
