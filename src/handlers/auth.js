@@ -69,9 +69,19 @@ async function handleLogin(request, env) {
     
     const sessionId = generateSessionId();
     
-    // Get the current origin for the callback URL
+    // Get the current origin and determine callback URL
     const url = new URL(request.url);
-    const callbackUrl = `${url.origin}/`;
+    const referer = request.headers.get('Referer');
+    
+    // Check if this is an embed request by looking at the referer
+    let callbackUrl = `${url.origin}/`;
+    if (referer && referer.includes('/embed/')) {
+      // Extract the embed path from referer for callback
+      const embedMatch = referer.match(/\/embed\/(\d+)\/?/);
+      if (embedMatch) {
+        callbackUrl = `${url.origin}/embed/${embedMatch[1]}/`;
+      }
+    }
     
     console.log('Creating auth URL with callback:', callbackUrl);
     const authUrl = createAuthUrl(env.LASTFM_API_KEY, callbackUrl);
@@ -80,7 +90,8 @@ async function handleLogin(request, env) {
     // Store temporary session for callback verification
     await env.SESSIONS.put(sessionId, JSON.stringify({
       type: 'pending',
-      created: Date.now()
+      created: Date.now(),
+      isEmbed: referer && referer.includes('/embed/') // Track if this is an embed session
     }), { expirationTtl: 600 }); // 10 minutes
     
     const response = Response.json({ authUrl });

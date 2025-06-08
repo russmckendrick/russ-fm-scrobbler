@@ -1,6 +1,8 @@
 import { HTML_CONTENT } from '../static/index.html.js';
 import { CSS_CONTENT } from '../static/styles.css.js';
 import { JS_CONTENT } from '../static/script.js.js';
+import { EMBED_HTML_CONTENT } from '../static/embed.html.js';
+import { EMBED_JS_CONTENT } from '../static/embed-script.js.js';
 
 export async function getStaticAsset(path, env) {
   // Default to index.html for root and unknown paths
@@ -17,6 +19,13 @@ export async function getStaticAsset(path, env) {
     });
   }
 
+  // Serve embed HTML page for embed URLs
+  if (path.match(/^\/embed\/\d+\/?$/)) {
+    return new Response(EMBED_HTML_CONTENT, {
+      headers: { 'Content-Type': 'text/html; charset=utf-8' }
+    });
+  }
+
   // Serve CSS
   if (path === '/styles.css') {
     return new Response(CSS_CONTENT, {
@@ -27,6 +36,13 @@ export async function getStaticAsset(path, env) {
   // Serve JavaScript
   if (path === '/script.js') {
     return new Response(JS_CONTENT, {
+      headers: { 'Content-Type': 'application/javascript; charset=utf-8' }
+    });
+  }
+
+  // Serve embed JavaScript
+  if (path === '/embed-script.js') {
+    return new Response(EMBED_JS_CONTENT, {
       headers: { 'Content-Type': 'application/javascript; charset=utf-8' }
     });
   }
