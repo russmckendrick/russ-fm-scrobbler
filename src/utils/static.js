@@ -10,6 +10,13 @@ export async function getStaticAsset(path, env) {
     });
   }
 
+  // Serve main HTML page for album URLs (client-side routing)
+  if (path.match(/^\/albums\/\d+\/?$/)) {
+    return new Response(HTML_CONTENT, {
+      headers: { 'Content-Type': 'text/html; charset=utf-8' }
+    });
+  }
+
   // Serve CSS
   if (path === '/styles.css') {
     return new Response(CSS_CONTENT, {

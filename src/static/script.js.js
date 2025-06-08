@@ -15,6 +15,9 @@ class ScrobblerApp {
         this.bindEvents();
         this.checkAuthStatus();
         this.updateSearchInputs();
+        
+        // Handle direct album URLs after everything is initialized
+        this.handleDirectAlbumURL();
     }
 
     bindEvents() {
@@ -69,13 +72,13 @@ class ScrobblerApp {
         const logoutBtn = document.getElementById('logout-btn');
 
         if (authenticated && this.currentUser) {
-            userInfo.textContent = \`LOGGED IN AS \${this.currentUser.username.toUpperCase()}\`;
-            loginBtn.style.display = 'none';
-            logoutBtn.style.display = 'inline-block';
+            userInfo.textContent = \`Logged in as \${this.currentUser.username}\`;
+            loginBtn.classList.add('d-none');
+            logoutBtn.classList.remove('d-none');
         } else {
-            userInfo.textContent = 'NOT LOGGED IN';
-            loginBtn.style.display = 'inline-block';
-            logoutBtn.style.display = 'none';
+            userInfo.textContent = 'Not logged in';
+            loginBtn.classList.remove('d-none');
+            logoutBtn.classList.add('d-none');
         }
     }
 
@@ -113,11 +116,11 @@ class ScrobblerApp {
         const artistAlbumInput = document.getElementById('artist-album-input');
 
         if (searchType === 'release-id') {
-            releaseIdInput.style.display = 'block';
-            artistAlbumInput.style.display = 'none';
+            releaseIdInput.classList.remove('d-none');
+            artistAlbumInput.classList.add('d-none');
         } else {
-            releaseIdInput.style.display = 'none';
-            artistAlbumInput.style.display = 'block';
+            releaseIdInput.classList.add('d-none');
+            artistAlbumInput.classList.remove('d-none');
         }
     }
 
@@ -182,34 +185,68 @@ class ScrobblerApp {
         const pagination = document.getElementById('pagination');
 
         if (this.searchResults.length === 0) {
-            resultsSection.style.display = 'none';
+            resultsSection.classList.add('d-none');
             return;
         }
 
-        resultsSection.style.display = 'block';
+        resultsSection.classList.remove('d-none');
 
-        // Create results grid
-        const resultsGrid = document.createElement('div');
-        resultsGrid.className = 'results-grid';
+        // Clear previous results
+        resultsContainer.innerHTML = '';
 
         this.searchResults.forEach((result, index) => {
-            const resultItem = document.createElement('div');
-            resultItem.className = 'result-item';
-            resultItem.addEventListener('click', () => this.selectAlbum(result));
+            const colDiv = document.createElement('div');
+            colDiv.className = 'col';
 
-            resultItem.innerHTML = \`
-                \${result.thumb ? \`<img src="\${result.thumb}" alt="\${result.title}" loading="lazy">\` : ''}
-                <h3>\${result.title}</h3>
-                <div class="artist">\${result.artist || 'Various Artists'}</div>
-                <div class="year">\${result.year || 'Unknown Year'}</div>
-                \${result.format ? \`<div class="text-small text-muted">\${result.format.join(', ')}</div>\` : ''}
+            const cardDiv = document.createElement('div');
+            cardDiv.className = 'card h-100 album-card';
+
+            // Use high-resolution image if available, fallback to thumb
+            const imageUrl = result.cover_image || result.thumb || '';
+            const hasImage = imageUrl && imageUrl !== '';
+
+            cardDiv.innerHTML = \`
+                \${hasImage ? 
+                    \`<img src="\${imageUrl}" class="card-img-top" alt="\${result.title}" loading="lazy">\` : 
+                    '<div class="card-img-top bg-light d-flex align-items-center justify-content-center text-muted" style="height: 200px;"><i class="bi bi-music-note" style="font-size: 3rem;"></i></div>'
+                }
+                <div class="card-body">
+                    <h5 class="card-title">
+                        <a class="stretched-link text-dark text-decoration-none" href="#" data-album-id="\${result.id}">
+                            \${result.title}
+                        </a>
+                    </h5>
+                    <p class="card-subtitle text-muted mb-2">
+                        by \${result.artist || 'Various Artists'}
+                    </p>
+                    \${result.genre ? \`
+                        <div class="mb-2">
+                            \${result.genre.map(genre => \`<span class="badge rounded-pill text-bg-primary text-light me-1">\${genre}</span>\`).join('')}
+                        </div>
+                    \` : ''}
+                    \${result.style ? \`
+                        <div class="mb-2">
+                            \${result.style.map(style => \`<span class="badge rounded-pill text-bg-secondary text-light me-1">\${style}</span>\`).join('')}
+                        </div>
+                    \` : ''}
+                </div>
+                <div class="card-footer">
+                    <small class="text-muted">
+                        \${result.year || 'Unknown Year'}
+                        \${result.format ? \` • \${result.format.join(', ')}\` : ''}
+                    </small>
+                </div>
             \`;
 
-            resultsGrid.appendChild(resultItem);
-        });
+            // Add click event to the card
+            cardDiv.addEventListener('click', (e) => {
+                e.preventDefault();
+                this.selectAlbum(result);
+            });
 
-        resultsContainer.innerHTML = '';
-        resultsContainer.appendChild(resultsGrid);
+            colDiv.appendChild(cardDiv);
+            resultsContainer.appendChild(colDiv);
+        });
 
         // Create pagination
         this.createPagination(pagination);
@@ -220,13 +257,19 @@ class ScrobblerApp {
 
         if (this.totalPages <= 1) return;
 
+        const paginationUl = document.createElement('ul');
+        paginationUl.className = 'pagination';
+
         // Previous button
         if (this.currentPage > 1) {
-            const prevBtn = document.createElement('button');
-            prevBtn.className = 'btn';
-            prevBtn.textContent = 'PREV';
-            prevBtn.addEventListener('click', () => this.performSearch(this.currentPage - 1));
-            container.appendChild(prevBtn);
+            const prevLi = document.createElement('li');
+            prevLi.className = 'page-item';
+            prevLi.innerHTML = \`<a class="page-link" href="#" aria-label="Previous"><span aria-hidden="true">&laquo;</span></a>\`;
+            prevLi.addEventListener('click', (e) => {
+                e.preventDefault();
+                this.performSearch(this.currentPage - 1);
+            });
+            paginationUl.appendChild(prevLi);
         }
 
         // Page numbers
@@ -234,21 +277,29 @@ class ScrobblerApp {
         const endPage = Math.min(this.totalPages, this.currentPage + 2);
 
         for (let i = startPage; i <= endPage; i++) {
-            const pageBtn = document.createElement('button');
-            pageBtn.className = i === this.currentPage ? 'btn btn-primary' : 'btn';
-            pageBtn.textContent = i;
-            pageBtn.addEventListener('click', () => this.performSearch(i));
-            container.appendChild(pageBtn);
+            const pageLi = document.createElement('li');
+            pageLi.className = i === this.currentPage ? 'page-item active' : 'page-item';
+            pageLi.innerHTML = \`<a class="page-link" href="#">\${i}</a>\`;
+            pageLi.addEventListener('click', (e) => {
+                e.preventDefault();
+                this.performSearch(i);
+            });
+            paginationUl.appendChild(pageLi);
         }
 
         // Next button
         if (this.currentPage < this.totalPages) {
-            const nextBtn = document.createElement('button');
-            nextBtn.className = 'btn';
-            nextBtn.textContent = 'NEXT';
-            nextBtn.addEventListener('click', () => this.performSearch(this.currentPage + 1));
-            container.appendChild(nextBtn);
+            const nextLi = document.createElement('li');
+            nextLi.className = 'page-item';
+            nextLi.innerHTML = \`<a class="page-link" href="#" aria-label="Next"><span aria-hidden="true">&raquo;</span></a>\`;
+            nextLi.addEventListener('click', (e) => {
+                e.preventDefault();
+                this.performSearch(this.currentPage + 1);
+            });
+            paginationUl.appendChild(nextLi);
         }
+
+        container.appendChild(paginationUl);
     }
 
     async selectAlbum(albumData) {
@@ -261,7 +312,12 @@ class ScrobblerApp {
 
             if (response.ok) {
                 this.selectedAlbum = data;
-                this.displayAlbumDetails();
+                this.displayFullAlbumPage();
+                
+                // Update URL to use just the release ID
+                window.history.pushState({albumData: data}, data.title, \`/albums/\${albumData.id}/\`);
+                document.title = \`\${data.title} - RUSS FM SCROBBLER\`;
+                
                 this.showStatus('success', 'Album loaded successfully');
             } else {
                 this.showStatus('error', data.error || 'Failed to load album details');
@@ -272,74 +328,200 @@ class ScrobblerApp {
         }
     }
 
-    displayAlbumDetails() {
-        const albumSection = document.getElementById('album-section');
-        const albumDetails = document.getElementById('album-details');
-        const trackList = document.getElementById('track-list');
+    createAlbumSlug(title, id) {
+        // No longer needed - keeping for backward compatibility
+        return id;
+    }
 
-        albumSection.style.display = 'block';
+    displayFullAlbumPage() {
+        console.log('displayFullAlbumPage called with album:', this.selectedAlbum);
+        
+        // Hide search sections and show full album page
+        const resultsSection = document.getElementById('results-section');
+        if (resultsSection) {
+            resultsSection.classList.add('d-none');
+            console.log('Hidden results section');
+        }
+        
+        // Hide the search card and jumbotron when showing full album page
+        const searchCards = document.querySelectorAll('.card');
+        const jumbotron = document.querySelector('.jumbotron-background');
+        
+        // Hide all existing cards (search form, results, etc.)
+        searchCards.forEach(card => {
+            card.classList.add('d-none');
+        });
+        console.log('Hidden search cards');
+        
+        if (jumbotron) {
+            jumbotron.classList.add('d-none');
+            console.log('Hidden jumbotron');
+        }
+        
+        const container = document.querySelector('.container.my-5');
+        if (!container) {
+            console.error('Could not find .container.my-5 element');
+            return;
+        }
+        
+        console.log('About to replace container innerHTML');
+        
+        // Create a new album page container
+        const albumPageHTML = \`
+            <div class="row justify-content-center">
+                <div class="col-12 col-md-8 col-lg-6">
+                    <!-- Album Cover -->
+                    <img src="\${this.selectedAlbum.images && this.selectedAlbum.images[0] ? this.selectedAlbum.images[0].uri : '/placeholder-album.jpg'}" 
+                         alt="\${this.selectedAlbum.title}" 
+                         class="img-fluid rounded shadow-lg mb-4 w-100">
+                    
+                    <!-- Artist/Genre/Style Badges -->
+                    <div class="d-flex flex-wrap mb-4">
+                        \${this.selectedAlbum.artists ? this.selectedAlbum.artists.map(artist => \`
+                            <div class="d-flex align-items-center p-1">
+                                <div class="d-flex">
+                                    <span class="bg-primary text-white small px-2 py-1 rounded-start">Artist</span>
+                                    <span class="bg-secondary text-white small px-2 py-1 rounded-end">\${artist.name}</span>
+                                </div>
+                            </div>
+                        \`).join('') : ''}
+                        
+                        \${this.selectedAlbum.genres ? this.selectedAlbum.genres.map(genre => \`
+                            <div class="d-flex align-items-center p-1">
+                                <div class="d-flex">
+                                    <span class="bg-primary text-white small px-2 py-1 rounded-start">Genre</span>
+                                    <span class="bg-secondary text-white small px-2 py-1 rounded-end">\${genre}</span>
+                                </div>
+                            </div>
+                        \`).join('') : ''}
+                        
+                        \${this.selectedAlbum.styles ? this.selectedAlbum.styles.map(style => \`
+                            <div class="d-flex align-items-center p-1">
+                                <div class="d-flex">
+                                    <span class="bg-primary text-white small px-2 py-1 rounded-start">Style</span>
+                                    <span class="bg-secondary text-white small px-2 py-1 rounded-end">\${style}</span>
+                                </div>
+                            </div>
+                        \`).join('') : ''}
+                    </div>
 
-        // Album info
-        const albumInfo = document.createElement('div');
-        albumInfo.className = 'album-info';
-        albumInfo.innerHTML = \`
-            <div class="album-artwork">
-                \${this.selectedAlbum.images && this.selectedAlbum.images[0] ? 
-                    \`<img src="\${this.selectedAlbum.images[0].uri}" alt="\${this.selectedAlbum.title}">\` : 
-                    '<div class="no-image">NO IMAGE</div>'
-                }
-            </div>
-            <div class="album-meta">
-                <h3>\${this.selectedAlbum.title}</h3>
-                <div class="artist">\${this.selectedAlbum.artists ? this.selectedAlbum.artists.map(a => a.name).join(', ') : 'Various Artists'}</div>
-                <div class="details">
-                    \${this.selectedAlbum.year ? \`<div>YEAR: \${this.selectedAlbum.year}</div>\` : ''}
-                    \${this.selectedAlbum.genres ? \`<div>GENRES: \${this.selectedAlbum.genres.join(', ')}</div>\` : ''}
-                    \${this.selectedAlbum.styles ? \`<div>STYLES: \${this.selectedAlbum.styles.join(', ')}</div>\` : ''}
-                    \${this.selectedAlbum.formats ? \`<div>FORMAT: \${this.selectedAlbum.formats.map(f => f.name).join(', ')}</div>\` : ''}
-                    \${this.selectedAlbum.labels ? \`<div>LABEL: \${this.selectedAlbum.labels.map(l => l.name).join(', ')}</div>\` : ''}
+                    <!-- Scrobble Button -->
+                    <button id="scrobble-album-btn" class="btn btn-danger btn-block mb-4 w-100">
+                        <i class="bi bi-file-music-fill me-2"></i>
+                        Scrobble "\${this.selectedAlbum.title}" to Last.fm
+                    </button>
+
+                    <!-- Album Information -->
+                    <div class="card mb-4">
+                        <div class="card-header">
+                            <h3 class="mb-0">\${this.selectedAlbum.title}</h3>
+                            <p class="text-muted mb-0">by \${this.selectedAlbum.artists ? this.selectedAlbum.artists.map(a => a.name).join(', ') : 'Various Artists'}</p>
+                        </div>
+                        <div class="card-body">
+                            <div class="row g-3">
+                                \${this.selectedAlbum.year ? \`
+                                    <div class="col-sm-6">
+                                        <strong>Year:</strong> \${this.selectedAlbum.year}
+                                    </div>
+                                \` : ''}
+                                \${this.selectedAlbum.formats ? \`
+                                    <div class="col-sm-6">
+                                        <strong>Format:</strong> \${this.selectedAlbum.formats.map(f => f.name).join(', ')}
+                                    </div>
+                                \` : ''}
+                                \${this.selectedAlbum.labels ? \`
+                                    <div class="col-sm-6">
+                                        <strong>Label:</strong> \${this.selectedAlbum.labels.map(l => l.name).join(', ')}
+                                    </div>
+                                \` : ''}
+                                \${this.selectedAlbum.country ? \`
+                                    <div class="col-sm-6">
+                                        <strong>Country:</strong> \${this.selectedAlbum.country}
+                                    </div>
+                                \` : ''}
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Track List -->
+                    \${this.selectedAlbum.tracklist && this.selectedAlbum.tracklist.length > 0 ? \`
+                        <div class="card mb-4">
+                            <div class="card-header">
+                                <h5 class="mb-0">
+                                    <i class="bi bi-music-note-list me-2"></i>
+                                    Track List
+                                </h5>
+                            </div>
+                            <div class="card-body p-0">
+                                \${this.selectedAlbum.tracklist.map((track, index) => {
+                                    if (track.type_ === 'track') {
+                                        return \`
+                                            <div class="track-item d-flex align-items-center justify-content-between">
+                                                <div class="d-flex align-items-center flex-grow-1">
+                                                    <span class="badge bg-secondary me-3">\${track.position || (index + 1)}</span>
+                                                    <span class="fw-medium">\${track.title}</span>
+                                                    \${track.duration ? \`<span class="text-muted ms-auto me-3">(\${track.duration})</span>\` : ''}
+                                                </div>
+                                                <button class="btn btn-primary btn-sm" onclick="app.scrobbleTrack(\${index})">
+                                                    <i class="bi bi-music-note me-1"></i>Scrobble
+                                                </button>
+                                            </div>
+                                        \`;
+                                    }
+                                    return '';
+                                }).join('')}
+                            </div>
+                        </div>
+                    \` : ''}
+
+                    <!-- Back Button -->
+                    <div class="text-center">
+                        <button id="back-to-search" class="btn btn-secondary">
+                            <i class="bi bi-arrow-left me-1"></i>
+                            Back to Search
+                        </button>
+                    </div>
+
+                    <!-- Status Messages -->
+                    <div id="album-status" class="mt-3 d-none"></div>
                 </div>
             </div>
         \`;
+        
+        // Replace the container content
+        container.innerHTML = albumPageHTML;
+        console.log('Container innerHTML replaced successfully');
 
-        albumDetails.innerHTML = '';
-        albumDetails.appendChild(albumInfo);
-
-        // Track list
-        if (this.selectedAlbum.tracklist && this.selectedAlbum.tracklist.length > 0) {
-            const trackListDiv = document.createElement('div');
-            trackListDiv.className = 'track-list';
-            trackListDiv.innerHTML = '<h3>TRACK LIST</h3>';
-
-            this.selectedAlbum.tracklist.forEach((track, index) => {
-                if (track.type_ === 'track') {
-                    const trackItem = document.createElement('div');
-                    trackItem.className = 'track-item';
-                    trackItem.innerHTML = \`
-                        <div class="track-info">
-                            <span class="track-number">\${track.position || (index + 1)}</span>
-                            <span class="track-title">\${track.title}</span>
-                            \${track.duration ? \`<span class="track-duration">(\${track.duration})</span>\` : ''}
-                        </div>
-                        <button class="btn track-scrobble-btn" onclick="app.scrobbleTrack(\${index})">SCROBBLE</button>
-                    \`;
-                    trackListDiv.appendChild(trackItem);
-                }
-            });
-
-            trackList.innerHTML = '';
-            trackList.appendChild(trackListDiv);
-        } else {
-            trackList.innerHTML = '<div class="text-muted">NO TRACK INFORMATION AVAILABLE</div>';
+        // Bind events for the new page
+        const scrobbleBtn = document.getElementById('scrobble-album-btn');
+        const backBtn = document.getElementById('back-to-search');
+        
+        if (scrobbleBtn) {
+            scrobbleBtn.addEventListener('click', () => this.scrobbleAlbum());
+            console.log('Bound scrobble button event');
+        }
+        
+        if (backBtn) {
+            backBtn.addEventListener('click', () => this.backToSearch());
+            console.log('Bound back button event');
         }
 
-        // Scroll to album section
-        albumSection.scrollIntoView({ behavior: 'smooth' });
+        // Scroll to top
+        window.scrollTo(0, 0);
+        console.log('displayFullAlbumPage completed successfully');
+    }
+
+    backToSearch() {
+        // Update URL to home page
+        window.history.pushState({}, 'RUSS FM SCROBBLER', '/');
+        
+        // Restore original page content
+        location.reload();
     }
 
     async scrobbleTrack(trackIndex) {
         if (!this.currentUser) {
-            this.showStatus('error', 'Please log in to Last.fm first');
+            this.showAlbumStatus('error', 'Please log in to Last.fm first');
             return;
         }
 
@@ -363,39 +545,39 @@ class ScrobblerApp {
             const data = await response.json();
 
             if (response.ok) {
-                this.showScrobbleStatus('success', \`Scrobbled: \${track.title}\`);
+                this.showAlbumStatus('success', \`Scrobbled: \${track.title}\`);
             } else {
-                this.showScrobbleStatus('error', data.error || 'Scrobble failed');
+                this.showAlbumStatus('error', data.error || 'Scrobble failed');
             }
         } catch (error) {
             console.error('Scrobble failed:', error);
-            this.showScrobbleStatus('error', 'Scrobble failed');
+            this.showAlbumStatus('error', 'Scrobble failed');
         }
     }
 
     async scrobbleAlbum() {
         if (!this.currentUser) {
-            this.showStatus('error', 'Please log in to Last.fm first');
+            this.showAlbumStatus('error', 'Please log in to Last.fm first');
             return;
         }
 
         if (!this.selectedAlbum || !this.selectedAlbum.tracklist) {
-            this.showScrobbleStatus('error', 'No album selected');
+            this.showAlbumStatus('error', 'No album selected');
             return;
         }
 
         const tracks = this.selectedAlbum.tracklist.filter(track => track.type_ === 'track');
         if (tracks.length === 0) {
-            this.showScrobbleStatus('error', 'No tracks found in album');
+            this.showAlbumStatus('error', 'No tracks found in album');
             return;
         }
 
         try {
-            const scrobbleBtn = document.getElementById('scrobble-all-btn');
+            const scrobbleBtn = document.getElementById('scrobble-album-btn');
             scrobbleBtn.disabled = true;
             scrobbleBtn.classList.add('loading');
 
-            this.showScrobbleStatus('loading', \`Scrobbling \${tracks.length} tracks...\`);
+            this.showAlbumStatus('loading', \`Scrobbling \${tracks.length} tracks...\`);
 
             const albumData = {
                 artist: this.selectedAlbum.artists ? this.selectedAlbum.artists[0].name : 'Unknown Artist',
@@ -415,36 +597,110 @@ class ScrobblerApp {
             const data = await response.json();
 
             if (response.ok) {
-                this.showScrobbleStatus('success', \`Successfully scrobbled \${tracks.length} tracks!\`);
+                this.showAlbumStatus('success', \`Successfully scrobbled \${tracks.length} tracks!\`);
             } else {
-                this.showScrobbleStatus('error', data.error || 'Album scrobble failed');
+                this.showAlbumStatus('error', data.error || 'Album scrobble failed');
             }
         } catch (error) {
             console.error('Album scrobble failed:', error);
-            this.showScrobbleStatus('error', 'Album scrobble failed');
+            this.showAlbumStatus('error', 'Album scrobble failed');
         } finally {
-            const scrobbleBtn = document.getElementById('scrobble-all-btn');
-            scrobbleBtn.disabled = false;
-            scrobbleBtn.classList.remove('loading');
+            const scrobbleBtn = document.getElementById('scrobble-album-btn');
+            if (scrobbleBtn) {
+                scrobbleBtn.disabled = false;
+                scrobbleBtn.classList.remove('loading');
+            }
         }
     }
 
     clearSelection() {
         this.selectedAlbum = null;
-        document.getElementById('album-section').style.display = 'none';
+        document.getElementById('album-section').classList.add('d-none');
         this.showStatus('success', 'Selection cleared');
     }
 
     showStatus(type, message) {
         const statusElement = document.getElementById('search-status');
-        statusElement.textContent = message;
-        statusElement.className = \`status-message \${type}\`;
+        statusElement.innerHTML = \`<div class="alert \${this.getStatusClasses(type)} mb-0">\${message}</div>\`;
+        statusElement.classList.remove('d-none');
     }
 
-    showScrobbleStatus(type, message) {
-        const statusElement = document.getElementById('scrobble-status');
-        statusElement.textContent = message;
-        statusElement.className = \`status-message \${type}\`;
+    showAlbumStatus(type, message) {
+        const statusElement = document.getElementById('album-status');
+        if (statusElement) {
+            statusElement.innerHTML = \`<div class="alert \${this.getStatusClasses(type)} mb-0">\${message}</div>\`;
+            statusElement.classList.remove('d-none');
+        }
+    }
+
+    getStatusClasses(type) {
+        switch(type) {
+            case 'success':
+                return 'alert-success';
+            case 'error':
+                return 'alert-danger';
+            case 'warning':
+                return 'alert-warning';
+            case 'loading':
+                return 'alert-info';
+            default:
+                return 'alert-secondary';
+        }
+    }
+
+    handleDirectAlbumURL() {
+        // Check if we're on a direct album URL like /albums/34201738/
+        const path = window.location.pathname;
+        console.log('Current path:', path);
+        
+        // Use string methods instead of regex to avoid template literal issues
+        if (path.startsWith('/albums/')) {
+            const pathParts = path.split('/');
+            if (pathParts.length >= 3 && pathParts[1] === 'albums') {
+                const releaseId = pathParts[2];
+                if (releaseId && /^\d+$/.test(releaseId)) {
+                    console.log('Found album URL, release ID:', releaseId);
+                    this.loadAlbumDirectly(releaseId);
+                    return;
+                }
+            }
+        }
+        console.log('No album URL match found');
+    }
+
+    async loadAlbumDirectly(releaseId) {
+        try {
+            console.log('Loading album directly for release ID:', releaseId);
+            this.showStatus('loading', 'Loading album...');
+
+            // Get detailed album information directly
+            const response = await fetch(\`/api/search/discogs/release/\${releaseId}\`);
+            console.log('API response status:', response.status);
+            const data = await response.json();
+            console.log('API response data:', data);
+
+            if (response.ok) {
+                this.selectedAlbum = data;
+                console.log('About to display full album page');
+                this.displayFullAlbumPage();
+                document.title = \`\${data.title} - RUSS FM SCROBBLER\`;
+                console.log('Album page should be displayed');
+            } else {
+                console.error('API error:', data.error);
+                this.showStatus('error', data.error || 'Album not found');
+                // Redirect to home page after a delay
+                setTimeout(() => {
+                    window.location.href = '/';
+                }, 3000);
+            }
+        } catch (error) {
+            console.error('Failed to load album directly:', error);
+            this.showStatus('error', 'Failed to load album');
+            // Redirect to home page after a delay
+            setTimeout(() => {
+                window.location.href = '/';
+            }, 3000);
+        }
     }
 }
 
