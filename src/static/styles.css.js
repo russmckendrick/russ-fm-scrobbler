@@ -285,12 +285,14 @@ footer a:hover {
 .breadcrumb {
     background-color: transparent;
     padding: 0;
-    margin-bottom: 1rem;
+    margin: 0;
+    font-size: 0.9rem;
 }
 
 .breadcrumb-item + .breadcrumb-item::before {
     content: "/";
     color: var(--accent-grey);
+    padding: 0 0.5rem;
 }
 
 .breadcrumb-item a {
