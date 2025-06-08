@@ -404,6 +404,9 @@ class ScrobblerApp {
                                     <button id="scrobble-album-btn" class="btn btn-success btn-lg w-100 mb-3">
                                         Scrobble album
                                     </button>
+                                    
+                                    <!-- Status Messages -->
+                                    <div id="album-status" class="d-none"></div>
                                 </div>
                             </div>
                         </div>
@@ -442,9 +445,6 @@ class ScrobblerApp {
                             Back to Search
                         </button>
                     </div>
-
-                    <!-- Status Messages -->
-                    <div id="album-status" class="mt-3 d-none"></div>
                 </div>
             </div>
         \`;

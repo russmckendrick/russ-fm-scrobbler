@@ -16,7 +16,7 @@ export const HTML_CONTENT = `<!DOCTYPE html>
                 <!-- Brand -->
                 <a class="navbar-brand" href="/">
                     <img src="https://www.russ.fm/images/record.svg" alt="logo" width="30" height="24" class="d-inline-block align-text-top navbar-icon me-2">
-                    RUSS FM SCROBBLER
+                    russFM
                 </a>
 
                 <!-- Menu Toggler -->
