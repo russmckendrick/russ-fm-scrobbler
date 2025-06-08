@@ -3,18 +3,17 @@ import { handleSearch } from './handlers/search.js';
 import { handleScrobble } from './handlers/scrobble.js';
 import { getStaticAsset } from './utils/static.js';
 
-const ALLOWED_ORIGINS = [
-  'http://localhost:8787',
-  'https://scrobbler.russ.fm',
-  'https://random.russ.fm',
-  'https://www.russ.fm',
-  'https://russ.fm',
-];
-
 export default {
   async fetch(request, env, ctx) {
     const url = new URL(request.url);
     const path = url.pathname;
+
+    // Parse ALLOWED_ORIGINS from environment variable
+    const allowedOriginsString = env.ALLOWED_ORIGINS_STRING || ''; // Default to empty string if not set
+    const parsedAllowedOrigins = allowedOriginsString
+      .split(',')
+      .map(origin => origin.trim()) // Trim whitespace
+      .filter(origin => origin.length > 0); // Remove empty strings
 
     const requestOrigin = request.headers.get('Origin');
 
@@ -25,7 +24,7 @@ export default {
     };
 
     // Conditionally set ACAO and Vary
-    if (requestOrigin && ALLOWED_ORIGINS.includes(requestOrigin)) {
+    if (requestOrigin && parsedAllowedOrigins.includes(requestOrigin)) {
       responseCorsHeaders['Access-Control-Allow-Origin'] = requestOrigin;
       responseCorsHeaders['Vary'] = 'Origin'; // Important for caching
     }

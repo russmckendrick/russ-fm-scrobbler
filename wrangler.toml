@@ -5,9 +5,15 @@ compatibility_date = "2024-01-15"
 [env.production]
 name = "russ-fm-scrobbler"
 route = "scrobbler.russ.fm/*"
+[env.production.vars]
+ENVIRONMENT = "production"
+ALLOWED_ORIGINS_STRING = "https://scrobbler.russ.fm,https://random.russ.fm,https://www.russ.fm,https://russ.fm"
 
 [env.development]
 name = "russ-fm-scrobbler-dev"
+[env.development.vars]
+ENVIRONMENT = "development"
+ALLOWED_ORIGINS_STRING = "http://localhost:8787,https://scrobbler.russ.fm,https://random.russ.fm,https://www.russ.fm,https://russ.fm"
 
 # KV Namespaces for session storage
 [[kv_namespaces]]
@@ -15,9 +21,8 @@ binding = "SESSIONS"
 id = "23aff07aebda4fb8a4febfe7f4b0c4ee"
 preview_id = "7ba5ade73ce343daaf188920975b0e99"
 
-# Environment variables (set these via wrangler secret put)
-[vars]
-ENVIRONMENT = "development"
+# Environment variables for specific environments are defined above.
+# Top-level [vars] can be used for variables common to all environments if not overridden.
 
 # Secrets to be set via CLI:
 # wrangler secret put DISCOGS_API_KEY
