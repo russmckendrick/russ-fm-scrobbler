@@ -107,25 +107,25 @@ class ScrobblerApp {
         input = input.trim();
         
         // Check for full Discogs URL
-        const urlMatch = input.match(/https?:\/\/(?:www\.)?discogs\.com\/release\/(\d+)/);
+        const urlMatch = input.match(/https?:\\/\\/(?:www\\.)?discogs\\.com\\/release\\/(\\d+)/);
         if (urlMatch) {
             return urlMatch[1];
         }
         
         // Check for [r123456] format
-        const bracketMatch = input.match(/^\[r(\d+)\]$/);
+        const bracketMatch = input.match(/^\\[r(\\d+)\\]$/);
         if (bracketMatch) {
             return bracketMatch[1];
         }
         
         // Check for r123456 format
-        const rMatch = input.match(/^r(\d+)$/);
+        const rMatch = input.match(/^r(\\d+)$/);
         if (rMatch) {
             return rMatch[1];
         }
         
         // Check for plain number
-        const numberMatch = input.match(/^\d+$/);
+        const numberMatch = input.match(/^\\d+$/);
         if (numberMatch) {
             return input;
         }
@@ -762,4 +762,4 @@ document.addEventListener('DOMContentLoaded', () => {
         // No auth callback, initialize the app normally
         window.app = new ScrobblerApp();
     }
-});`; 
+});`;
