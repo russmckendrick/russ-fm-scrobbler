@@ -171,6 +171,27 @@ src/
 
 ## Rate Limiting
 
+
+## Embeddable Scrobble Popup
+
+You can now open a streamlined popup to scrobble a Discogs album from your own site:
+
+**How to use:**
+
+```js
+window.open('https://scrobbler.russ.fm/embed/34191121/', 'russFMScrobbler', 'width=400,height=500');
+```
+Replace `34191121` with the Discogs release ID you want to scrobble.
+
+- The popup will prompt login if needed, load the album, scrobble automatically, and close itself.
+- If the window cannot close automatically (e.g., popup blockers), a Close button is shown.
+- The UI is minimal, centered, and headerless for seamless embedding.
+
+**CORS:**
+- Make sure `russ.fm` is in your `ALLOWED_ORIGINS_STRING` in `wrangler.toml` for proper embedding.
+
+---
+
 The application respects API rate limits:
 - **Discogs**: 60 requests per minute for authenticated requests
 - **Last.fm**: 5 requests per second, 300 requests per 15 minutes
