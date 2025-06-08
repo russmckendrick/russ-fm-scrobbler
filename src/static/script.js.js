@@ -651,15 +651,21 @@ class ScrobblerApp {
     handleDirectAlbumURL() {
         // Check if we're on a direct album URL like /albums/34201738/
         const path = window.location.pathname;
-        console.log('Current path:', path);
+        console.log('handleDirectAlbumURL - Current path:', path);
         
-        // Use string methods instead of regex to avoid template literal issues
-        if (path.startsWith('/albums/')) {
-            const pathParts = path.split('/');
-            if (pathParts.length >= 3 && pathParts[1] === 'albums') {
-                const releaseId = pathParts[2];
-                if (releaseId && /^\d+$/.test(releaseId)) {
-                    console.log('Found album URL, release ID:', releaseId);
+        // Use string methods to parse the URL
+        if (path.includes('/albums/')) {
+            const pathParts = path.split('/').filter(part => part.length > 0);
+            console.log('Path parts:', pathParts);
+            
+            const albumIndex = pathParts.indexOf('albums');
+            if (albumIndex !== -1 && albumIndex < pathParts.length - 1) {
+                const releaseId = pathParts[albumIndex + 1];
+                console.log('Extracted release ID:', releaseId);
+                
+                // Check if it's a valid number
+                if (releaseId && !isNaN(releaseId)) {
+                    console.log('Valid release ID found:', releaseId);
                     this.loadAlbumDirectly(releaseId);
                     return;
                 }
@@ -706,26 +712,31 @@ class ScrobblerApp {
 
 // Initialize the app when DOM is loaded
 document.addEventListener('DOMContentLoaded', () => {
-    window.app = new ScrobblerApp();
-});
-
-// Handle auth callback
-const urlParams = new URLSearchParams(window.location.search);
-if (urlParams.get('token')) {
-    // This is an auth callback, handle it
-    fetch('/api/auth/callback' + window.location.search, { method: 'POST' })
-        .then(response => response.json())
-        .then(data => {
-            if (data.success) {
-                // Remove token from URL and reload
-                window.history.replaceState({}, document.title, window.location.pathname);
-                window.location.reload();
-            } else {
-                alert('Authentication failed: ' + (data.error || 'Unknown error'));
-            }
-        })
-        .catch(error => {
-            console.error('Auth callback failed:', error);
-            alert('Authentication failed');
-        });
-}`; 
+    console.log('DOM loaded, initializing app...');
+    console.log('Current URL:', window.location.href);
+    console.log('Current pathname:', window.location.pathname);
+    
+    // Handle auth callback first
+    const urlParams = new URLSearchParams(window.location.search);
+    if (urlParams.get('token')) {
+        // This is an auth callback, handle it
+        fetch('/api/auth/callback' + window.location.search, { method: 'POST' })
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    // Remove token from URL and reload
+                    window.history.replaceState({}, document.title, window.location.pathname);
+                    window.location.reload();
+                } else {
+                    alert('Authentication failed: ' + (data.error || 'Unknown error'));
+                }
+            })
+            .catch(error => {
+                console.error('Auth callback failed:', error);
+                alert('Authentication failed');
+            });
+    } else {
+        // No auth callback, initialize the app normally
+        window.app = new ScrobblerApp();
+    }
+});`; 
