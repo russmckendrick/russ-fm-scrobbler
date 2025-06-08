@@ -429,6 +429,13 @@ a.btn-outline-secondary:hover {
     }
 }
 
+/* Hide cover image on mobile for user header */
+@media (max-width: 768px) {
+    #user-header {
+        background-image: none !important;
+    }
+}
+
 @media (max-width: 768px) {
     body {
         padding-top: 66px;
