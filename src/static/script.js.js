@@ -705,7 +705,7 @@ class ScrobblerApp {
                             <li class="breadcrumb-item artist-name">\${this.selectedAlbum.artists ? this.selectedAlbum.artists[0].name : 'Unknown Artist'}</li>
                             <li class="breadcrumb-item active" aria-current="page">\${this.selectedAlbum.title}</li>
                         </ol>
-                        <div class="data-source">Data source: \${this.selectedAlbum.id && String(this.selectedAlbum.id).startsWith('lastfm-') ? 'Last.fm' : 'Discogs'}</div>
+                        <div class="data-source">Data source: \${this.selectedAlbum.id && String(this.selectedAlbum.id).startsWith('lastfm-') ? '<span class="lastfm-logo me-1"></span>Last.fm' : '<span class="discogs-logo me-1"></span>Discogs'}</div>
                     </div>
                 </nav>
 
