@@ -19,8 +19,38 @@ async function handleDiscogsSearch(url, env) {
     const page = parseInt(url.searchParams.get('page')) || 1;
     
     if (releaseId) {
-      // Direct release lookup
-      return handleReleaseDetails(releaseId, env);
+      // Direct release lookup - wrap in results format
+      const releaseDetails = await handleReleaseDetails(releaseId, env);
+      const releaseData = await releaseDetails.json();
+      
+      if (releaseDetails.status !== 200) {
+        return releaseDetails; // Return error as-is
+      }
+      
+      // Transform to search result format
+      const searchResult = {
+        id: releaseData.id,
+        title: releaseData.title,
+        artist: releaseData.artists && releaseData.artists.length > 0 ? releaseData.artists[0].name : 'Unknown Artist',
+        year: releaseData.year,
+        format: releaseData.formats ? releaseData.formats.map(f => f.name) : [],
+        label: releaseData.labels ? releaseData.labels.map(l => l.name) : [],
+        genre: releaseData.genres || [],
+        style: releaseData.styles || [],
+        thumb: releaseData.images && releaseData.images.length > 0 ? releaseData.images[0].uri150 || releaseData.images[0].uri : null,
+        uri: releaseData.uri,
+        resource_url: releaseData.resource_url
+      };
+      
+      return Response.json({
+        results: [searchResult],
+        pagination: {
+          page: 1,
+          pages: 1,
+          per_page: 1,
+          items: 1
+        }
+      });
     } else if (artist && album) {
       // Search by artist and album
       return searchByArtistAlbum(artist, album, page, env);
