@@ -6,6 +6,10 @@ export async function handleSearch(request, env, path) {
     return handleReleaseDetails(releaseId, env);
   } else if (path === '/api/search/discogs') {
     return handleDiscogsSearch(url, env);
+  } else if (path === '/api/search/lastfm') {
+    return handleLastFmSearch(url, env);
+  } else if (path === '/api/search/lastfm/album') {
+    return handleLastFmAlbumDetails(url, env);
   }
   
   return new Response('Search endpoint not found', { status: 404 });
@@ -196,4 +200,165 @@ function extractArtistName(title) {
     return parts[0].trim();
   }
   return 'Unknown Artist';
+}
+
+async function handleLastFmSearch(url, env) {
+  try {
+    const album = url.searchParams.get('album');
+    const page = parseInt(url.searchParams.get('page')) || 1;
+    
+    if (!album) {
+      return Response.json({ 
+        error: 'Missing album parameter' 
+      }, { status: 400 });
+    }
+    
+    const limit = 20;
+    const searchUrl = new URL('http://ws.audioscrobbler.com/2.0/');
+    searchUrl.searchParams.set('method', 'album.search');
+    searchUrl.searchParams.set('album', album);
+    searchUrl.searchParams.set('api_key', env.LASTFM_API_KEY);
+    searchUrl.searchParams.set('format', 'json');
+    searchUrl.searchParams.set('limit', limit.toString());
+    searchUrl.searchParams.set('page', page.toString());
+    
+    const response = await fetch(searchUrl.toString());
+    
+    if (!response.ok) {
+      return Response.json({ 
+        error: 'Last.fm search failed' 
+      }, { status: response.status });
+    }
+    
+    const data = await response.json();
+    
+    if (data.error) {
+      return Response.json({ 
+        error: data.message || 'Last.fm API error' 
+      }, { status: 400 });
+    }
+    
+    const albums = data.results?.albummatches?.album || [];
+    const albumArray = Array.isArray(albums) ? albums : [albums];
+    
+    // Transform Last.fm results to match our expected format
+    const transformedResults = albumArray.map((album, index) => ({
+      id: `lastfm-${album.mbid || `${album.artist}-${album.name}-${index}`}`, // Create unique ID
+      title: album.name,
+      artist: album.artist,
+      year: null, // Last.fm search doesn't provide year
+      format: [],
+      label: [],
+      genre: [],
+      style: [],
+      thumb: album.image?.find(img => img.size === 'large')?.['#text'] || 
+             album.image?.find(img => img.size === 'medium')?.['#text'] || '',
+      cover_image: album.image?.find(img => img.size === 'extralarge')?.['#text'] || 
+                   album.image?.find(img => img.size === 'large')?.['#text'] || '',
+      uri: album.url,
+      resource_url: album.url,
+      mbid: album.mbid,
+      listeners: album.listeners,
+      playcount: album.playcount
+    }));
+    
+    // Calculate pagination info
+    const totalPages = Math.ceil(parseInt(data.results?.['opensearch:totalResults'] || 0) / limit);
+    
+    return Response.json({
+      results: transformedResults,
+      pagination: {
+        page: page,
+        pages: totalPages,
+        per_page: limit,
+        items: parseInt(data.results?.['opensearch:totalResults'] || 0)
+      }
+    });
+  } catch (error) {
+    console.error('Last.fm search error:', error);
+    return Response.json({ 
+      error: 'Last.fm search failed' 
+    }, { status: 500 });
+  }
+}
+
+async function handleLastFmAlbumDetails(url, env) {
+  try {
+    const artist = url.searchParams.get('artist');
+    const album = url.searchParams.get('album');
+    
+    if (!artist || !album) {
+      return Response.json({ 
+        error: 'Missing artist or album parameter' 
+      }, { status: 400 });
+    }
+    
+    const searchUrl = new URL('http://ws.audioscrobbler.com/2.0/');
+    searchUrl.searchParams.set('method', 'album.getinfo');
+    searchUrl.searchParams.set('artist', artist);
+    searchUrl.searchParams.set('album', album);
+    searchUrl.searchParams.set('api_key', env.LASTFM_API_KEY);
+    searchUrl.searchParams.set('format', 'json');
+    
+    const response = await fetch(searchUrl.toString());
+    
+    if (!response.ok) {
+      return Response.json({ 
+        error: 'Last.fm album details failed' 
+      }, { status: response.status });
+    }
+    
+    const data = await response.json();
+    
+    if (data.error) {
+      return Response.json({ 
+        error: data.message || 'Last.fm API error' 
+      }, { status: 400 });
+    }
+    
+    const albumInfo = data.album;
+    
+    // Transform to match Discogs format
+    const transformedData = {
+      id: `lastfm-${albumInfo.mbid || `${artist}-${album}`}`,
+      title: albumInfo.name,
+      artists: [{ name: albumInfo.artist }],
+      year: null, // Last.fm doesn't always provide release year
+      genres: albumInfo.tags?.tag?.map(tag => tag.name) || [],
+      styles: [],
+      formats: [],
+      labels: [],
+      tracklist: albumInfo.tracks?.track?.map((track, index) => ({
+        position: (index + 1).toString(),
+        title: track.name,
+        duration: track.duration ? formatDuration(track.duration) : '',
+        type_: 'track'
+      })) || [],
+      images: albumInfo.image ? [{
+        uri: albumInfo.image.find(img => img.size === 'extralarge')?.['#text'] || 
+             albumInfo.image.find(img => img.size === 'large')?.['#text'] || '',
+        uri150: albumInfo.image.find(img => img.size === 'medium')?.['#text'] || ''
+      }] : [],
+      uri: albumInfo.url,
+      resource_url: albumInfo.url,
+      mbid: albumInfo.mbid,
+      listeners: albumInfo.listeners,
+      playcount: albumInfo.playcount,
+      summary: albumInfo.wiki?.summary || ''
+    };
+    
+    return Response.json(transformedData);
+  } catch (error) {
+    console.error('Last.fm album details error:', error);
+    return Response.json({ 
+      error: 'Failed to fetch album details' 
+    }, { status: 500 });
+  }
+}
+
+function formatDuration(seconds) {
+  if (!seconds || seconds === '0') return '';
+  const mins = Math.floor(seconds / 60);
+  const secs = seconds % 60;
+  return `${mins}:${secs.toString().padStart(2, '0')}`;
 } 

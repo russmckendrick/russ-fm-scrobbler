@@ -3,7 +3,7 @@ export const HTML_CONTENT = `<!DOCTYPE html>
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>RUSS FM SCROBBLER</title>
+    <title>russFM [Scrobbler]</title>
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
     <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css" rel="stylesheet">
     <link rel="stylesheet" href="/styles.css">
@@ -78,27 +78,24 @@ export const HTML_CONTENT = `<!DOCTYPE html>
                                         Discogs Release ID
                                     </label>
                                 </div>
-                                <div class="form-check form-check-inline">
-                                    <input class="form-check-input" type="radio" name="search-type" id="artist-album-radio" value="artist-album">
-                                    <label class="form-check-label" for="artist-album-radio">
-                                        Artist + Album Name
-                                    </label>
-                                </div>
+                                                            <div class="form-check form-check-inline">
+                                <input class="form-check-input" type="radio" name="search-type" id="album-search-radio" value="album-search">
+                                <label class="form-check-label" for="album-search-radio">
+                                    Album Name
+                                </label>
                             </div>
+                        </div>
 
-                            <!-- Search Inputs -->
-                            <div id="release-id-input" class="mb-3">
-                                <input type="text" id="release-id" class="form-control" placeholder="Enter Discogs Release ID (e.g., 123456)">
+                        <!-- Search Inputs -->
+                        <div id="release-id-input" class="mb-3">
+                            <input type="text" id="release-id" class="form-control" placeholder="Enter Discogs Release ID (e.g., 123456)">
+                        </div>
+                        
+                        <div id="album-search-input" class="d-none">
+                            <div class="mb-3">
+                                <input type="text" id="album-name" class="form-control" placeholder="Album name">
                             </div>
-                            
-                            <div id="artist-album-input" class="d-none">
-                                <div class="mb-3">
-                                    <input type="text" id="artist-name" class="form-control" placeholder="Artist name">
-                                </div>
-                                <div class="mb-3">
-                                    <input type="text" id="album-name" class="form-control" placeholder="Album name">
-                                </div>
-                            </div>
+                        </div>
 
                             <!-- Search Button -->
                             <button id="search-btn" class="btn btn-primary">

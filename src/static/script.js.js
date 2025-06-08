@@ -37,9 +37,6 @@ class ScrobblerApp {
         document.getElementById('release-id').addEventListener('keypress', (e) => {
             if (e.key === 'Enter') this.performSearch();
         });
-        document.getElementById('artist-name').addEventListener('keypress', (e) => {
-            if (e.key === 'Enter') this.performSearch();
-        });
         document.getElementById('album-name').addEventListener('keypress', (e) => {
             if (e.key === 'Enter') this.performSearch();
         });
@@ -113,14 +110,14 @@ class ScrobblerApp {
     updateSearchInputs() {
         const searchType = document.querySelector('input[name="search-type"]:checked').value;
         const releaseIdInput = document.getElementById('release-id-input');
-        const artistAlbumInput = document.getElementById('artist-album-input');
+        const albumSearchInput = document.getElementById('album-search-input');
 
         if (searchType === 'release-id') {
             releaseIdInput.classList.remove('d-none');
-            artistAlbumInput.classList.add('d-none');
+            albumSearchInput.classList.add('d-none');
         } else {
             releaseIdInput.classList.add('d-none');
-            artistAlbumInput.classList.remove('d-none');
+            albumSearchInput.classList.remove('d-none');
         }
     }
 
@@ -136,16 +133,43 @@ class ScrobblerApp {
                 this.showStatus('error', 'Please enter a release ID');
                 return;
             }
-            searchParams.releaseId = releaseId;
+            
+            // For Release ID searches, go directly to the album page
+            try {
+                searchBtn.disabled = true;
+                searchBtn.classList.add('loading');
+                this.showStatus('loading', 'Loading album...');
+
+                const response = await fetch(\`/api/search/discogs/release/\${releaseId}\`);
+                const data = await response.json();
+
+                if (response.ok) {
+                    this.selectedAlbum = data;
+                    this.displayFullAlbumPage();
+                    
+                    // Update URL to use just the release ID
+                    window.history.pushState({albumData: data}, data.title, \`/albums/\${releaseId}/\`);
+                    document.title = \`\${data.title} - RUSS FM SCROBBLER\`;
+                    
+                    this.showStatus('success', 'Album loaded successfully');
+                } else {
+                    this.showStatus('error', data.error || 'Album not found');
+                }
+            } catch (error) {
+                console.error('Failed to load album:', error);
+                this.showStatus('error', 'Failed to load album');
+            } finally {
+                searchBtn.disabled = false;
+                searchBtn.classList.remove('loading');
+            }
+            return;
         } else {
-            const artist = document.getElementById('artist-name').value.trim();
             const album = document.getElementById('album-name').value.trim();
             
-            if (!artist || !album) {
-                this.showStatus('error', 'Please enter both artist and album name');
+            if (!album) {
+                this.showStatus('error', 'Please enter an album name');
                 return;
             }
-            searchParams.artist = artist;
             searchParams.album = album;
         }
 
@@ -157,7 +181,7 @@ class ScrobblerApp {
             this.showStatus('loading', 'Searching...');
 
             const queryString = new URLSearchParams(searchParams).toString();
-            const response = await fetch(\`/api/search/discogs?\${queryString}\`);
+            const response = await fetch(\`/api/search/lastfm?\${queryString}\`);
             const data = await response.json();
 
             if (response.ok) {
@@ -306,21 +330,42 @@ class ScrobblerApp {
         try {
             this.showStatus('loading', 'Loading album details...');
 
-            // Get detailed album information
-            const response = await fetch(\`/api/search/discogs/release/\${albumData.id}\`);
-            const data = await response.json();
+            // Check if this is a Last.fm result (ID starts with 'lastfm-')
+            if (albumData.id.startsWith('lastfm-')) {
+                // For Last.fm albums, get detailed info from Last.fm API
+                const response = await fetch(\`/api/search/lastfm/album?artist=\${encodeURIComponent(albumData.artist)}&album=\${encodeURIComponent(albumData.title)}\`);
+                const data = await response.json();
 
-            if (response.ok) {
-                this.selectedAlbum = data;
-                this.displayFullAlbumPage();
-                
-                // Update URL to use just the release ID
-                window.history.pushState({albumData: data}, data.title, \`/albums/\${albumData.id}/\`);
-                document.title = \`\${data.title} - RUSS FM SCROBBLER\`;
-                
-                this.showStatus('success', 'Album loaded successfully');
+                if (response.ok) {
+                    this.selectedAlbum = data;
+                    this.displayFullAlbumPage();
+                    
+                    // Update URL for Last.fm albums
+                    const albumSlug = \`\${albumData.artist}-\${albumData.title}\`.toLowerCase().replace(/[^a-z0-9]+/g, '-');
+                    window.history.pushState({albumData: data}, data.title, \`/albums/lastfm/\${albumSlug}/\`);
+                    document.title = \`\${data.title} - RUSS FM SCROBBLER\`;
+                    
+                    this.showStatus('success', 'Album loaded successfully');
+                } else {
+                    this.showStatus('error', data.error || 'Failed to load album details');
+                }
             } else {
-                this.showStatus('error', data.error || 'Failed to load album details');
+                // For Discogs albums, use existing logic
+                const response = await fetch(\`/api/search/discogs/release/\${albumData.id}\`);
+                const data = await response.json();
+
+                if (response.ok) {
+                    this.selectedAlbum = data;
+                    this.displayFullAlbumPage();
+                    
+                    // Update URL to use just the release ID
+                    window.history.pushState({albumData: data}, data.title, \`/albums/\${albumData.id}/\`);
+                    document.title = \`\${data.title} - RUSS FM SCROBBLER\`;
+                    
+                    this.showStatus('success', 'Album loaded successfully');
+                } else {
+                    this.showStatus('error', data.error || 'Failed to load album details');
+                }
             }
         } catch (error) {
             console.error('Failed to load album:', error);
