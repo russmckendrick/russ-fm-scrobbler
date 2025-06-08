@@ -163,7 +163,7 @@ class ScrobblerApp {
                 searchBtn.classList.remove('loading');
             }
             return;
-        } else {
+        } else if (searchType === 'album-search') {
             const album = document.getElementById('album-name').value.trim();
             
             if (!album) {
@@ -171,6 +171,9 @@ class ScrobblerApp {
                 return;
             }
             searchParams.album = album;
+        } else {
+            this.showStatus('error', 'Invalid search type');
+            return;
         }
 
         searchParams.page = page;
@@ -422,7 +425,7 @@ class ScrobblerApp {
                             <li class="breadcrumb-item">\${this.selectedAlbum.artists ? this.selectedAlbum.artists[0].name : 'Unknown Artist'}</li>
                             <li class="breadcrumb-item active" aria-current="page">\${this.selectedAlbum.title}</li>
                         </ol>
-                        <div class="data-source">Data source: \${this.selectedAlbum.id && this.selectedAlbum.id.startsWith('lastfm-') ? 'Last.fm' : 'Discogs'}</div>
+                        <div class="data-source">Data source: \${this.selectedAlbum.id && typeof this.selectedAlbum.id === 'string' && this.selectedAlbum.id.startsWith('lastfm-') ? 'Last.fm' : 'Discogs'}</div>
                     </div>
                 </nav>
 
