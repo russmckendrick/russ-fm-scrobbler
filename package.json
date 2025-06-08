@@ -1,0 +1,22 @@
+{
+  "name": "russ-fm-scrobbler",
+  "version": "1.0.0",
+  "description": "A web app for searching Discogs and scrobbling to LastFM",
+  "main": "src/worker.js",
+  "scripts": {
+    "dev": "wrangler dev",
+    "deploy": "wrangler deploy",
+    "test": "jest"
+  },
+  "keywords": ["lastfm", "discogs", "scrobbling", "music", "cloudflare-workers"],
+  "author": "Russ",
+  "license": "MIT",
+  "devDependencies": {
+    "@cloudflare/workers-types": "^4.20231025.0",
+    "wrangler": "^3.0.0",
+    "jest": "^29.0.0"
+  },
+  "dependencies": {
+    "crypto-js": "^4.2.0"
+  }
+} 
