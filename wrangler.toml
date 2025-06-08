@@ -13,7 +13,7 @@ ALLOWED_ORIGINS_STRING = "https://scrobbler.russ.fm,https://random.russ.fm,https
 name = "russ-fm-scrobbler-dev"
 [env.development.vars]
 ENVIRONMENT = "development"
-ALLOWED_ORIGINS_STRING = "http://localhost:8787,https://scrobbler.russ.fm,https://random.russ.fm,https://www.russ.fm,https://russ.fm"
+ALLOWED_ORIGINS_STRING = "http://localhost:8787"
 
 # KV Namespaces for session storage
 [[kv_namespaces]]
