@@ -53,7 +53,30 @@ npx wrangler secret put DISCOGS_API_KEY
 npx wrangler secret put DISCOGS_SECRET
 ```
 
-### 4. KV Namespace Setup
+
+### 4. Configure CORS Origins
+
+This application uses a CORS (Cross-Origin Resource Sharing) policy to control which websites can access its API. You need to configure the allowed origins in your `wrangler.toml` file.
+
+The `ALLOWED_ORIGINS_STRING` variable should be set under `[env.development.vars]` for your local development environment and `[env.production.vars]` for your deployed application. This variable takes a comma-separated string of URLs.
+
+**Example for `wrangler.toml`:**
+
+```toml
+[env.development.vars]
+ENVIRONMENT = "development"
+# Allow only local development server for testing
+ALLOWED_ORIGINS_STRING = "http://localhost:8787"
+
+[env.production.vars]
+ENVIRONMENT = "production"
+# Allow your production domains
+ALLOWED_ORIGINS_STRING = "https://scrobbler.russ.fm,https://random.russ.fm,https://www.russ.fm,https://russ.fm"
+```
+
+Adjust these values to match your specific frontend URLs.
+
+### 5. KV Namespace Setup
 
 Create a KV namespace for session storage:
 
@@ -64,7 +87,7 @@ npx wrangler kv:namespace create "SESSIONS" --preview
 
 Update the `wrangler.toml` file with the namespace IDs returned by the commands above.
 
-### 5. Domain Configuration
+### 6. Domain Configuration
 
 Update `wrangler.toml` to use your domain:
 
