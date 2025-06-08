@@ -599,6 +599,7 @@ class ScrobblerApp {
                                 <!-- Scrobble Buttons -->
                                 <div class="scrobble-actions">
                                     <button id="scrobble-album-btn" class="btn btn-success btn-lg w-100 mb-3">
+                                        <span class="lastfm-logo-white me-2"></span>
                                         Scrobble album
                                     </button>
                                     
@@ -623,6 +624,7 @@ class ScrobblerApp {
                                                         \${track.duration ? \`<span class="track-duration">\${track.duration}</span>\` : ''}
                                                     </div>
                                                     <button class="btn btn-success btn-sm track-scrobble-btn" onclick="app.scrobbleTrack(\${index})">
+                                                        <span class="lastfm-logo-white me-1"></span>
                                                         Scrobble
                                                     </button>
                                                 </div>

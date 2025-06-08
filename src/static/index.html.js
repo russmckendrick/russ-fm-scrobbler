@@ -36,7 +36,7 @@ export const HTML_CONTENT = `<!DOCTYPE html>
                     <div class="d-flex align-items-center gap-3">
                         <span id="user-info" class="text-light small">Not logged in</span>
                         <button id="login-btn" class="btn btn-secondary btn-sm">
-                            <i class="bi bi-box-arrow-in-right me-1"></i>
+                            <span class="lastfm-logo-white me-2"></span>
                             Login to Last.fm
                         </button>
                         <button id="logout-btn" class="btn btn-outline-light btn-sm d-none">
@@ -100,8 +100,8 @@ export const HTML_CONTENT = `<!DOCTYPE html>
                         <div class="col-md-6">
                             <!-- Discogs Release Search -->
                             <div class="mb-3">
-                                <label for="release-id" class="form-label fw-bold">
-                                    <i class="bi bi-disc me-1"></i>
+                                <label for="release-id" class="form-label fw-bold d-flex align-items-center">
+                                    <span class="discogs-logo me-2"></span>
                                     Discogs Release
                                 </label>
                                 <input type="text" id="release-id" class="form-control" 
@@ -111,7 +111,7 @@ export const HTML_CONTENT = `<!DOCTYPE html>
                                 </div>
                             </div>
                             <button id="discogs-search-btn" class="btn btn-primary w-100 mb-3">
-                                <i class="bi bi-search me-1"></i>
+                                <span class="discogs-logo-white me-2"></span>
                                 Search Discogs
                             </button>
                         </div>
@@ -119,18 +119,18 @@ export const HTML_CONTENT = `<!DOCTYPE html>
                         <div class="col-md-6">
                             <!-- Album Name Search -->
                             <div class="mb-3">
-                                <label for="album-name" class="form-label fw-bold">
-                                    <i class="bi bi-music-note-list me-1"></i>
+                                <label for="album-name" class="form-label fw-bold d-flex align-items-center">
+                                    <span class="lastfm-logo me-2"></span>
                                     Album Name
                                 </label>
                                 <input type="text" id="album-name" class="form-control" 
                                        placeholder="Enter album name to search">
                                 <div class="form-text">
-                                    Search for albums by name across multiple sources
+                                    Search for albums by name using Last.fm
                                 </div>
                             </div>
                             <button id="album-search-btn" class="btn btn-secondary w-100 mb-3">
-                                <i class="bi bi-search me-1"></i>
+                                <span class="lastfm-logo-white me-2"></span>
                                 Search Albums
                             </button>
                         </div>
@@ -166,7 +166,7 @@ export const HTML_CONTENT = `<!DOCTYPE html>
                     <div id="track-list" class="mb-4"></div>
                     <div class="d-flex gap-2 flex-wrap justify-content-center">
                         <button id="scrobble-all-btn" class="btn btn-primary btn-lg">
-                            <i class="bi bi-music-note-list me-1"></i>
+                            <span class="lastfm-logo-white me-2"></span>
                             Scrobble Entire Album
                         </button>
                         <button id="clear-selection-btn" class="btn btn-secondary">
@@ -185,12 +185,16 @@ export const HTML_CONTENT = `<!DOCTYPE html>
         <div class="container text-center">
             <p class="mb-2">
                 Powered by 
-                <a href="https://www.discogs.com/developers" target="_blank" class="text-light">Discogs API</a> 
+                <a href="https://www.discogs.com/developers" target="_blank" class="text-light d-inline-flex align-items-center">
+                    <span class="discogs-logo-white me-1"></span>
+                    Discogs API
+                </a> 
                 & 
-                <a href="https://www.last.fm/api" target="_blank" class="text-light">Last.fm API</a>
-            </p>
-            <p class="mb-0">
-                <a href="https://github.com/yourusername/russ-fm-scrobbler" target="_blank" class="text-light">
+                <a href="https://www.last.fm/api" target="_blank" class="text-light d-inline-flex align-items-center">
+                    <span class="lastfm-logo-white me-1"></span>
+                    Last.fm API
+                </a> | 
+                <a href="https://github.com/russmckendrick/russ-fm-scrobbler" target="_blank" class="text-light">
                     <i class="bi bi-github me-1"></i>
                     Source Code
                 </a>
