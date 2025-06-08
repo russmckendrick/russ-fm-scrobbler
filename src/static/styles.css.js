@@ -284,6 +284,35 @@ a[href*="last.fm"]:hover {
     text-decoration: underline;
 }
 
+/* View on Discogs button styling */
+.btn-outline-secondary,
+.btn-outline-secondary:link,
+.btn-outline-secondary:visited,
+.btn-outline-secondary:active,
+.btn-outline-secondary:focus {
+    background-color: var(--discogs-dark) !important;
+    border-color: var(--discogs-dark) !important;
+    color: white !important;
+    font-weight: 500;
+    text-decoration: none !important;
+}
+
+.btn-outline-secondary:hover,
+.btn-outline-secondary:focus:hover {
+    background-color: #555555 !important;
+    border-color: #555555 !important;
+    color: white !important;
+    text-decoration: none !important;
+}
+
+.btn-outline-secondary .discogs-logo::before {
+    background-image: var(--discogs-logo-white); /* White logo on dark background */
+}
+
+.btn-outline-secondary:hover .discogs-logo::before {
+    background-image: var(--discogs-logo-white); /* Keep white logo on hover */
+}
+
 .bg-primary {
     background-color: var(--light-navy) !important;
 }

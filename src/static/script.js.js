@@ -300,7 +300,7 @@ class ScrobblerApp {
                 window.history.pushState({albumData: data}, data.title, \`/albums/\${releaseId}/\`);
                 document.title = \`\${data.title} - RUSS FM SCROBBLER\`;
                 
-                this.showStatus('success', 'Album loaded successfully');
+                // Don't call showStatus here since displayFullAlbumPage() replaced the container
             } else {
                 this.showStatus('error', data.error || 'Album not found');
             }
@@ -483,7 +483,7 @@ class ScrobblerApp {
             this.showStatus('loading', 'Loading album details...');
 
             // Check if this is a Last.fm result (ID starts with 'lastfm-')
-            if (albumData.id.startsWith('lastfm-')) {
+            if (String(albumData.id).startsWith('lastfm-')) {
                 // For Last.fm albums, get detailed info from Last.fm API
                 const response = await fetch(\`/api/search/lastfm/album?artist=\${encodeURIComponent(albumData.artist)}&album=\${encodeURIComponent(albumData.title)}\`);
                 const data = await response.json();
@@ -497,7 +497,7 @@ class ScrobblerApp {
                     window.history.pushState({albumData: data}, data.title, \`/albums/lastfm/\${albumSlug}/\`);
                     document.title = \`\${data.title} - RUSS FM SCROBBLER\`;
                     
-                    this.showStatus('success', 'Album loaded successfully');
+                    // Don't call showStatus here since displayFullAlbumPage() replaced the container
                 } else {
                     this.showStatus('error', data.error || 'Failed to load album details');
                 }
@@ -514,7 +514,7 @@ class ScrobblerApp {
                     window.history.pushState({albumData: data}, data.title, \`/albums/\${albumData.id}/\`);
                     document.title = \`\${data.title} - RUSS FM SCROBBLER\`;
                     
-                    this.showStatus('success', 'Album loaded successfully');
+                    // Don't call showStatus here since displayFullAlbumPage() replaced the container
                 } else {
                     this.showStatus('error', data.error || 'Failed to load album details');
                 }
@@ -574,7 +574,7 @@ class ScrobblerApp {
                             <li class="breadcrumb-item">\${this.selectedAlbum.artists ? this.selectedAlbum.artists[0].name : 'Unknown Artist'}</li>
                             <li class="breadcrumb-item active" aria-current="page">\${this.selectedAlbum.title}</li>
                         </ol>
-                        <div class="data-source">Data source: \${this.selectedAlbum.id && typeof this.selectedAlbum.id === 'string' && this.selectedAlbum.id.startsWith('lastfm-') ? 'Last.fm' : 'Discogs'}</div>
+                        <div class="data-source">Data source: \${this.selectedAlbum.id && String(this.selectedAlbum.id).startsWith('lastfm-') ? 'Last.fm' : 'Discogs'}</div>
                     </div>
                 </nav>
 
@@ -602,6 +602,13 @@ class ScrobblerApp {
                                         <span class="lastfm-logo-white me-2"></span>
                                         Scrobble album
                                     </button>
+                                    
+                                    \${this.selectedAlbum.id && !String(this.selectedAlbum.id).startsWith('lastfm-') ? \`
+                                        <a href="https://www.discogs.com/release/\${this.selectedAlbum.id}" target="_blank" class="btn btn-outline-secondary btn-lg w-100 mb-3">
+                                            <span class="discogs-logo me-2"></span>
+                                            View on Discogs
+                                        </a>
+                                    \` : ''}
                                     
                                     <!-- Status Messages -->
                                     <div id="album-status" class="d-none"></div>
