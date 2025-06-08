@@ -14,7 +14,6 @@ class ScrobblerApp {
     init() {
         this.bindEvents();
         this.checkAuthStatus();
-        this.updateSearchInputs();
         
         // Handle direct album URLs after everything is initialized
         this.handleDirectAlbumURL();
@@ -25,20 +24,16 @@ class ScrobblerApp {
         document.getElementById('login-btn').addEventListener('click', () => this.login());
         document.getElementById('logout-btn').addEventListener('click', () => this.logout());
 
-        // Search type toggle
-        document.querySelectorAll('input[name="search-type"]').forEach(radio => {
-            radio.addEventListener('change', () => this.updateSearchInputs());
-        });
-
-        // Search
-        document.getElementById('search-btn').addEventListener('click', () => this.performSearch());
+        // Search buttons
+        document.getElementById('discogs-search-btn').addEventListener('click', () => this.performDiscogsSearch());
+        document.getElementById('album-search-btn').addEventListener('click', () => this.performAlbumSearch());
         
         // Enter key support for search inputs
         document.getElementById('release-id').addEventListener('keypress', (e) => {
-            if (e.key === 'Enter') this.performSearch();
+            if (e.key === 'Enter') this.performDiscogsSearch();
         });
         document.getElementById('album-name').addEventListener('keypress', (e) => {
-            if (e.key === 'Enter') this.performSearch();
+            if (e.key === 'Enter') this.performAlbumSearch();
         });
 
         // Album actions
@@ -107,76 +102,95 @@ class ScrobblerApp {
         }
     }
 
-    updateSearchInputs() {
-        const searchType = document.querySelector('input[name="search-type"]:checked').value;
-        const releaseIdInput = document.getElementById('release-id-input');
-        const albumSearchInput = document.getElementById('album-search-input');
+    parseDiscogsInput(input) {
+        // Remove whitespace
+        input = input.trim();
+        
+        // Check for full Discogs URL
+        const urlMatch = input.match(/https?:\/\/(?:www\.)?discogs\.com\/release\/(\d+)/);
+        if (urlMatch) {
+            return urlMatch[1];
+        }
+        
+        // Check for [r123456] format
+        const bracketMatch = input.match(/^\[r(\d+)\]$/);
+        if (bracketMatch) {
+            return bracketMatch[1];
+        }
+        
+        // Check for r123456 format
+        const rMatch = input.match(/^r(\d+)$/);
+        if (rMatch) {
+            return rMatch[1];
+        }
+        
+        // Check for plain number
+        const numberMatch = input.match(/^\d+$/);
+        if (numberMatch) {
+            return input;
+        }
+        
+        return null;
+    }
 
-        if (searchType === 'release-id') {
-            releaseIdInput.classList.remove('d-none');
-            albumSearchInput.classList.add('d-none');
-        } else {
-            releaseIdInput.classList.add('d-none');
-            albumSearchInput.classList.remove('d-none');
+    async performDiscogsSearch() {
+        const input = document.getElementById('release-id').value.trim();
+        const searchBtn = document.getElementById('discogs-search-btn');
+        
+        if (!input) {
+            this.showStatus('error', 'Please enter a Discogs release ID or URL');
+            return;
+        }
+        
+        // Parse the input to extract release ID
+        const releaseId = this.parseDiscogsInput(input);
+        if (!releaseId) {
+            this.showStatus('error', 'Invalid Discogs format. Please use a URL, [r123456], r123456, or just the ID (123456)');
+            return;
+        }
+        
+        try {
+            searchBtn.disabled = true;
+            searchBtn.classList.add('loading');
+            this.showStatus('loading', 'Loading album...');
+
+            const response = await fetch(\`/api/search/discogs/release/\${releaseId}\`);
+            const data = await response.json();
+
+            if (response.ok) {
+                this.selectedAlbum = data;
+                this.displayFullAlbumPage();
+                
+                // Update URL to use just the release ID
+                window.history.pushState({albumData: data}, data.title, \`/albums/\${releaseId}/\`);
+                document.title = \`\${data.title} - RUSS FM SCROBBLER\`;
+                
+                this.showStatus('success', 'Album loaded successfully');
+            } else {
+                this.showStatus('error', data.error || 'Album not found');
+            }
+        } catch (error) {
+            console.error('Failed to load album:', error);
+            this.showStatus('error', 'Failed to load album');
+        } finally {
+            searchBtn.disabled = false;
+            searchBtn.classList.remove('loading');
         }
     }
 
-    async performSearch(page = 1) {
-        const searchType = document.querySelector('input[name="search-type"]:checked').value;
-        const searchBtn = document.getElementById('search-btn');
+    async performAlbumSearch(page = 1) {
+        const album = document.getElementById('album-name').value.trim();
+        const searchBtn = document.getElementById('album-search-btn');
         
-        let searchParams = {};
-
-        if (searchType === 'release-id') {
-            const releaseId = document.getElementById('release-id').value.trim();
-            if (!releaseId) {
-                this.showStatus('error', 'Please enter a release ID');
-                return;
-            }
-            
-            // For Release ID searches, go directly to the album page
-            try {
-                searchBtn.disabled = true;
-                searchBtn.classList.add('loading');
-                this.showStatus('loading', 'Loading album...');
-
-                const response = await fetch(\`/api/search/discogs/release/\${releaseId}\`);
-                const data = await response.json();
-
-                if (response.ok) {
-                    this.selectedAlbum = data;
-                    this.displayFullAlbumPage();
-                    
-                    // Update URL to use just the release ID
-                    window.history.pushState({albumData: data}, data.title, \`/albums/\${releaseId}/\`);
-                    document.title = \`\${data.title} - RUSS FM SCROBBLER\`;
-                    
-                    this.showStatus('success', 'Album loaded successfully');
-                } else {
-                    this.showStatus('error', data.error || 'Album not found');
-                }
-            } catch (error) {
-                console.error('Failed to load album:', error);
-                this.showStatus('error', 'Failed to load album');
-            } finally {
-                searchBtn.disabled = false;
-                searchBtn.classList.remove('loading');
-            }
-            return;
-        } else if (searchType === 'album-search') {
-            const album = document.getElementById('album-name').value.trim();
-            
-            if (!album) {
-                this.showStatus('error', 'Please enter an album name');
-                return;
-            }
-            searchParams.album = album;
-        } else {
-            this.showStatus('error', 'Invalid search type');
+        if (!album) {
+            this.showStatus('error', 'Please enter an album name');
             return;
         }
 
-        searchParams.page = page;
+        const searchParams = {
+            album: album,
+            page: page
+        };
 
         try {
             searchBtn.disabled = true;
@@ -189,8 +203,8 @@ class ScrobblerApp {
 
             if (response.ok) {
                 this.searchResults = data.results || [];
-                this.currentPage = data.pagination?.page || 1;
-                this.totalPages = data.pagination?.pages || 1;
+                this.currentPage = (data.pagination && data.pagination.page) || 1;
+                this.totalPages = (data.pagination && data.pagination.pages) || 1;
                 
                 this.displaySearchResults();
                 this.showStatus('success', \`Found \${this.searchResults.length} results\`);
@@ -294,7 +308,7 @@ class ScrobblerApp {
             prevLi.innerHTML = \`<a class="page-link" href="#" aria-label="Previous"><span aria-hidden="true">&laquo;</span></a>\`;
             prevLi.addEventListener('click', (e) => {
                 e.preventDefault();
-                this.performSearch(this.currentPage - 1);
+                this.performAlbumSearch(this.currentPage - 1);
             });
             paginationUl.appendChild(prevLi);
         }
@@ -309,7 +323,7 @@ class ScrobblerApp {
             pageLi.innerHTML = \`<a class="page-link" href="#">\${i}</a>\`;
             pageLi.addEventListener('click', (e) => {
                 e.preventDefault();
-                this.performSearch(i);
+                this.performAlbumSearch(i);
             });
             paginationUl.appendChild(pageLi);
         }
@@ -321,7 +335,7 @@ class ScrobblerApp {
             nextLi.innerHTML = \`<a class="page-link" href="#" aria-label="Next"><span aria-hidden="true">&raquo;</span></a>\`;
             nextLi.addEventListener('click', (e) => {
                 e.preventDefault();
-                this.performSearch(this.currentPage + 1);
+                this.performAlbumSearch(this.currentPage + 1);
             });
             paginationUl.appendChild(nextLi);
         }

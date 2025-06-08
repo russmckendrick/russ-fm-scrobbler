@@ -69,44 +69,47 @@ export const HTML_CONTENT = `<!DOCTYPE html>
                     </h2>
                     
                     <div class="row">
-                        <div class="col-md-8">
-                            <!-- Search Type Toggle -->
+                        <div class="col-md-6">
+                            <!-- Discogs Release Search -->
                             <div class="mb-3">
-                                <div class="form-check form-check-inline">
-                                    <input class="form-check-input" type="radio" name="search-type" id="release-id-radio" value="release-id" checked>
-                                    <label class="form-check-label" for="release-id-radio">
-                                        Discogs Release ID
-                                    </label>
-                                </div>
-                                                            <div class="form-check form-check-inline">
-                                <input class="form-check-input" type="radio" name="search-type" id="album-search-radio" value="album-search">
-                                <label class="form-check-label" for="album-search-radio">
-                                    Album Name
+                                <label for="release-id" class="form-label fw-bold">
+                                    <i class="bi bi-disc me-1"></i>
+                                    Discogs Release
                                 </label>
+                                <input type="text" id="release-id" class="form-control" 
+                                       placeholder="Enter Discogs URL, [r123456], r123456, or 123456">
+                                <div class="form-text">
+                                    Supports: Full URLs, [r123456], r123456, or just the ID (123456)
+                                </div>
                             </div>
-                        </div>
-
-                        <!-- Search Inputs -->
-                        <div id="release-id-input" class="mb-3">
-                            <input type="text" id="release-id" class="form-control" placeholder="Enter Discogs Release ID (e.g., 123456)">
+                            <button id="discogs-search-btn" class="btn btn-primary w-100 mb-3">
+                                <i class="bi bi-search me-1"></i>
+                                Search Discogs
+                            </button>
                         </div>
                         
-                        <div id="album-search-input" class="d-none">
+                        <div class="col-md-6">
+                            <!-- Album Name Search -->
                             <div class="mb-3">
-                                <input type="text" id="album-name" class="form-control" placeholder="Album name">
+                                <label for="album-name" class="form-label fw-bold">
+                                    <i class="bi bi-music-note-list me-1"></i>
+                                    Album Name
+                                </label>
+                                <input type="text" id="album-name" class="form-control" 
+                                       placeholder="Enter album name to search">
+                                <div class="form-text">
+                                    Search for albums by name across multiple sources
+                                </div>
                             </div>
-                        </div>
-
-                            <!-- Search Button -->
-                            <button id="search-btn" class="btn btn-primary">
+                            <button id="album-search-btn" class="btn btn-secondary w-100 mb-3">
                                 <i class="bi bi-search me-1"></i>
-                                Search
+                                Search Albums
                             </button>
-
-                            <!-- Status Message -->
-                            <div id="search-status" class="mt-3 d-none"></div>
                         </div>
                     </div>
+
+                    <!-- Status Message -->
+                    <div id="search-status" class="mt-3 d-none"></div>
                 </div>
             </div>
 
