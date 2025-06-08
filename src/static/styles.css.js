@@ -81,6 +81,103 @@ body {
     background-color: var(--light-navy);
 }
 
+/* User header specific styling */
+#user-header {
+    position: relative;
+    overflow: hidden;
+}
+
+#user-header::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: linear-gradient(135deg, rgba(61, 66, 85, 0.95) 0%, rgba(61, 66, 85, 0.8) 40%, rgba(61, 66, 85, 0.4) 70%, rgba(61, 66, 85, 0.1) 100%);
+    z-index: 1;
+}
+
+#user-header .text-container {
+    position: relative;
+    z-index: 2;
+}
+
+#user-header .user-avatar {
+    transition: transform 0.3s ease;
+    position: relative;
+    z-index: 2;
+}
+
+#user-header:hover .user-avatar {
+    transform: scale(1.05);
+}
+
+#user-header .user-stats {
+    font-size: 0.9rem;
+    opacity: 0.9;
+}
+
+#user-header .user-stats i {
+    opacity: 0.8;
+}
+
+.refresh-artwork-btn {
+    position: absolute;
+    bottom: 1rem;
+    right: 1rem;
+    background: rgba(255, 255, 255, 0.1);
+    border: none;
+    color: rgba(255, 255, 255, 0.7);
+    width: 40px;
+    height: 40px;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: all 0.3s ease;
+    backdrop-filter: blur(10px);
+    z-index: 3;
+    cursor: pointer;
+}
+
+.refresh-artwork-btn:hover {
+    background: rgba(255, 255, 255, 0.2);
+    color: rgba(255, 255, 255, 0.9);
+    transform: rotate(180deg) scale(1.1);
+}
+
+.refresh-artwork-btn:focus {
+    outline: none;
+    box-shadow: 0 0 0 2px rgba(255, 255, 255, 0.3);
+}
+
+/* Pro badge styling */
+.pro-badge {
+    background: linear-gradient(135deg, #ffd700 0%, #ffed4e 100%);
+    color: #1a1e2e;
+    font-weight: bold;
+    font-size: 0.75rem;
+    padding: 0.25rem 0.5rem;
+    border-radius: 1rem;
+    text-shadow: none;
+    box-shadow: 0 2px 4px rgba(255, 215, 0, 0.3);
+    animation: subtle-glow 2s ease-in-out infinite alternate;
+}
+
+.pro-badge i {
+    color: #1a1e2e;
+}
+
+@keyframes subtle-glow {
+    from {
+        box-shadow: 0 2px 4px rgba(255, 215, 0, 0.3);
+    }
+    to {
+        box-shadow: 0 2px 8px rgba(255, 215, 0, 0.5);
+    }
+}
+
 /* Bootstrap component overrides */
 .btn-primary {
     background-color: var(--dark-navy);

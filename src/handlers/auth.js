@@ -11,6 +11,8 @@ export async function handleAuth(request, env, path) {
     return handleCallback(request, env, url);
   } else if (path === '/api/auth/logout') {
     return handleLogout(request, env);
+  } else if (path === '/api/auth/refresh-artwork') {
+    return handleRefreshArtwork(request, env);
   }
   
   return new Response('Auth endpoint not found', { status: 404 });
@@ -42,7 +44,9 @@ async function handleAuthStatus(request, env) {
       authenticated: true,
       user: {
         username: session.username,
-        sessionKey: session.sessionKey
+        sessionKey: session.sessionKey,
+        userInfo: session.userInfo || null, // Include full user info if available
+        lastAlbumArt: session.lastAlbumArt || null // Include latest album artwork
       }
     });
   } catch (error) {
@@ -128,10 +132,31 @@ async function handleCallback(request, env, url) {
       }, { status: 400 });
     }
     
-    // Store authenticated session
+    // Get user's recent tracks for album artwork
+    const recentTracks = await getUserRecentTracks(sessionKey, env.LASTFM_API_KEY, env.LASTFM_SECRET, 1);
+    let lastAlbumArt = null;
+    
+    if (recentTracks && recentTracks.length > 0) {
+      const latestTrack = Array.isArray(recentTracks) ? recentTracks[0] : recentTracks;
+      if (latestTrack.image && latestTrack.image.length > 0) {
+        // Find the largest available image
+        const largeImage = latestTrack.image.find(img => img.size === 'extralarge') ||
+                          latestTrack.image.find(img => img.size === 'large') ||
+                          latestTrack.image.find(img => img.size === 'medium') ||
+                          latestTrack.image[0];
+        
+        if (largeImage && largeImage['#text']) {
+          lastAlbumArt = largeImage['#text'];
+        }
+      }
+    }
+    
+    // Store authenticated session with full user info
     await env.SESSIONS.put(sessionId, JSON.stringify({
       type: 'authenticated',
       username: userInfo.name,
+      userInfo: userInfo, // Store full user info from Last.fm
+      lastAlbumArt: lastAlbumArt, // Store latest album artwork
       sessionKey: sessionKey,
       created: Date.now()
     }), { expirationTtl: 86400 }); // 24 hours
@@ -165,6 +190,70 @@ async function handleLogout(request, env) {
   } catch (error) {
     console.error('Logout error:', error);
     return Response.json({ error: 'Logout failed' }, { status: 500 });
+  }
+}
+
+async function handleRefreshArtwork(request, env) {
+  try {
+    const sessionId = getSessionFromRequest(request);
+    
+    if (!sessionId) {
+      return Response.json({ 
+        error: 'Not authenticated' 
+      }, { status: 401 });
+    }
+    
+    const sessionData = await env.SESSIONS.get(sessionId);
+    
+    if (!sessionData) {
+      return Response.json({ 
+        error: 'Session not found' 
+      }, { status: 401 });
+    }
+    
+    const session = JSON.parse(sessionData);
+    
+    if (session.type !== 'authenticated') {
+      return Response.json({ 
+        error: 'Not authenticated' 
+      }, { status: 401 });
+    }
+    
+    // Get user's recent tracks for updated album artwork
+    const recentTracks = await getUserRecentTracks(session.sessionKey, env.LASTFM_API_KEY, env.LASTFM_SECRET, 1);
+    let lastAlbumArt = null;
+    
+    if (recentTracks && recentTracks.length > 0) {
+      const latestTrack = Array.isArray(recentTracks) ? recentTracks[0] : recentTracks;
+      if (latestTrack.image && latestTrack.image.length > 0) {
+        // Find the largest available image
+        const largeImage = latestTrack.image.find(img => img.size === 'extralarge') ||
+                          latestTrack.image.find(img => img.size === 'large') ||
+                          latestTrack.image.find(img => img.size === 'medium') ||
+                          latestTrack.image[0];
+        
+        if (largeImage && largeImage['#text']) {
+          lastAlbumArt = largeImage['#text'];
+        }
+      }
+    }
+    
+    // Update session with new album artwork
+    session.lastAlbumArt = lastAlbumArt;
+    
+    await env.SESSIONS.put(sessionId, JSON.stringify(session), { 
+      expirationTtl: 86400 
+    });
+    
+    return Response.json({ 
+      success: true, 
+      lastAlbumArt: lastAlbumArt 
+    });
+  } catch (error) {
+    console.error('Refresh artwork error:', error);
+    return Response.json({ 
+      error: 'Failed to refresh artwork' 
+    }, { status: 500 });
   }
 }
 
@@ -239,6 +328,38 @@ async function getUserInfo(sessionKey, apiKey, secret) {
     return null;
   } catch (error) {
     console.error('Get user info error:', error);
+    return null;
+  }
+}
+
+async function getUserRecentTracks(sessionKey, apiKey, secret, limit = 1) {
+  try {
+    const params = {
+      method: 'user.getRecentTracks',
+      api_key: apiKey,
+      sk: sessionKey,
+      limit: limit.toString()
+    };
+    
+    const signature = generateApiSig(params, secret);
+    params.api_sig = signature;
+    params.format = 'json';
+    
+    const response = await fetch('https://ws.audioscrobbler.com/2.0/', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+      body: new URLSearchParams(params)
+    });
+    
+    const data = await response.json();
+    
+    if (data.recenttracks && data.recenttracks.track) {
+      return data.recenttracks.track;
+    }
+    
+    return null;
+  } catch (error) {
+    console.error('Get recent tracks error:', error);
     return null;
   }
 } 

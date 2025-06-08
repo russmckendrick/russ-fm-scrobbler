@@ -39,6 +39,16 @@ class ScrobblerApp {
         // Album actions
         document.getElementById('scrobble-all-btn').addEventListener('click', () => this.scrobbleAlbum());
         document.getElementById('clear-selection-btn').addEventListener('click', () => this.clearSelection());
+        
+        // Refresh artwork button (will be bound when user header is shown)
+        this.bindRefreshArtworkButton();
+    }
+
+    bindRefreshArtworkButton() {
+        const refreshBtn = document.getElementById('refresh-artwork-btn');
+        if (refreshBtn) {
+            refreshBtn.addEventListener('click', () => this.refreshAlbumArtwork());
+        }
     }
 
     async checkAuthStatus() {
@@ -62,15 +72,140 @@ class ScrobblerApp {
         const userInfo = document.getElementById('user-info');
         const loginBtn = document.getElementById('login-btn');
         const logoutBtn = document.getElementById('logout-btn');
+        const defaultHeader = document.getElementById('default-header');
+        const userHeader = document.getElementById('user-header');
 
         if (authenticated && this.currentUser) {
             userInfo.textContent = \`Logged in as \${this.currentUser.username}\`;
             loginBtn.classList.add('d-none');
             logoutBtn.classList.remove('d-none');
+            
+            // Show user header and hide default header
+            defaultHeader.classList.add('d-none');
+            userHeader.classList.remove('d-none');
+            
+            // Populate user header with account information
+            this.populateUserHeader();
+            
+            // Bind refresh artwork button
+            this.bindRefreshArtworkButton();
         } else {
             userInfo.textContent = 'Not logged in';
             loginBtn.classList.remove('d-none');
             logoutBtn.classList.add('d-none');
+            
+            // Show default header and hide user header
+            defaultHeader.classList.remove('d-none');
+            userHeader.classList.add('d-none');
+        }
+    }
+
+    populateUserHeader() {
+        if (!this.currentUser || !this.currentUser.userInfo) return;
+        
+        const userInfo = this.currentUser.userInfo;
+        
+        // Set user display name (use realname if available, otherwise username)
+        const displayName = userInfo.realname || userInfo.name || this.currentUser.username;
+        document.getElementById('user-display-name').textContent = displayName;
+        
+        // Show Pro badge if user is a subscriber
+        const proBadge = document.getElementById('user-pro-badge');
+        if (userInfo.subscriber && parseInt(userInfo.subscriber) === 1) {
+            proBadge.classList.remove('d-none');
+        } else {
+            proBadge.classList.add('d-none');
+        }
+        
+        // Set user avatar
+        const avatar = document.getElementById('user-avatar');
+        if (userInfo.image && userInfo.image.length > 0) {
+            // Find the largest available image
+            const largeImage = userInfo.image.find(img => img.size === 'extralarge') ||
+                              userInfo.image.find(img => img.size === 'large') ||
+                              userInfo.image.find(img => img.size === 'medium') ||
+                              userInfo.image[0];
+            
+            if (largeImage && largeImage['#text']) {
+                avatar.src = largeImage['#text'];
+                avatar.style.display = 'block';
+            } else {
+                avatar.style.display = 'none';
+            }
+        } else {
+            avatar.style.display = 'none';
+        }
+        
+        // Set playcount
+        const playcount = userInfo.playcount ? parseInt(userInfo.playcount).toLocaleString() : '0';
+        document.getElementById('user-playcount').textContent = playcount;
+        
+        // Set registration date
+        if (userInfo.registered) {
+            let regDate;
+            
+            // Try to use the unixtime attribute first (more reliable)
+            if (userInfo.registered.unixtime) {
+                regDate = new Date(parseInt(userInfo.registered.unixtime) * 1000);
+            } else if (userInfo.registered['#text']) {
+                // Fallback to parsing the text content
+                regDate = new Date(userInfo.registered['#text']);
+            }
+            
+            if (regDate && !isNaN(regDate.getTime())) {
+                const formattedDate = regDate.toLocaleDateString('en-US', { 
+                    year: 'numeric', 
+                    month: 'long' 
+                });
+                document.getElementById('user-registered').textContent = formattedDate;
+            } else {
+                document.getElementById('user-registered').textContent = 'Unknown';
+            }
+        } else {
+            document.getElementById('user-registered').textContent = 'Unknown';
+        }
+        
+        // Set background image from last album artwork
+        this.updateHeaderBackground();
+    }
+
+    updateHeaderBackground() {
+        const userHeader = document.getElementById('user-header');
+        
+        if (this.currentUser && this.currentUser.lastAlbumArt) {
+            // Use the album artwork as background - larger and more prominent
+            userHeader.style.backgroundImage = \`url('\${this.currentUser.lastAlbumArt}')\`;
+            userHeader.style.backgroundSize = 'auto 120%'; // Make it larger than the container
+            userHeader.style.backgroundRepeat = 'no-repeat';
+            userHeader.style.backgroundPosition = 'right center';
+        } else {
+            // Fallback to default background
+            userHeader.style.backgroundImage = "url('https://www.russ.fm/images/sticker-clear.svg')";
+            userHeader.style.backgroundSize = 'contain';
+            userHeader.style.backgroundRepeat = 'no-repeat';
+            userHeader.style.backgroundPosition = 'bottom right';
+        }
+    }
+
+    async refreshAlbumArtwork() {
+        try {
+            const response = await fetch('/api/auth/refresh-artwork', { method: 'POST' });
+            const data = await response.json();
+            
+            if (response.ok && data.success) {
+                // Update the current user data
+                this.currentUser.lastAlbumArt = data.lastAlbumArt;
+                
+                // Update the background
+                this.updateHeaderBackground();
+                
+                this.showStatus('success', 'Album artwork updated!');
+            } else {
+                this.showStatus('error', data.error || 'Failed to refresh artwork');
+            }
+        } catch (error) {
+            console.error('Failed to refresh artwork:', error);
+            this.showStatus('error', 'Failed to refresh artwork');
         }
     }
 

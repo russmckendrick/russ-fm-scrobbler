@@ -52,12 +52,40 @@ export const HTML_CONTENT = `<!DOCTYPE html>
     <!-- Main Content -->
     <div id="content" class="flex-fill">
         <div class="container my-5">
-            <!-- Jumbotron Header -->
-            <div class="bg-primary text-light rounded-3 d-flex flex-column-reverse flex-md-column flex-lg-row align-items-center jumbotron-background mb-5">
+            <!-- Jumbotron Header - Default (Not Logged In) -->
+            <div id="default-header" class="bg-primary text-light rounded-3 d-flex flex-column-reverse flex-md-column flex-lg-row align-items-center jumbotron-background mb-5">
                 <div class="text-container p-5">
                     <h1 class="display-4">Music Scrobbler</h1>
                     <p class="lead">Search for albums on Discogs and scrobble them to Last.fm</p>
                 </div>
+            </div>
+
+            <!-- User Account Header - Logged In -->
+            <div id="user-header" class="bg-primary text-light rounded-3 d-flex flex-column-reverse flex-md-column flex-lg-row align-items-center jumbotron-background mb-5 d-none">
+                <div class="text-container p-5">
+                    <div class="d-flex align-items-center mb-3">
+                        <img id="user-avatar" src="" alt="User Avatar" class="user-avatar rounded-circle me-3" width="60" height="60" style="border: 2px solid rgba(255,255,255,0.3);">
+                        <div class="flex-grow-1">
+                            <div class="d-flex align-items-center mb-1">
+                                <h1 class="display-6 mb-0 me-2">Welcome back, <span id="user-display-name"></span>!</h1>
+                                <span id="user-pro-badge" class="badge pro-badge d-none">
+                                    <i class="bi bi-star-fill me-1"></i>PRO
+                                </span>
+                            </div>
+                            <p class="mb-0 user-stats">
+                                <i class="bi bi-music-note me-1"></i>
+                                <span id="user-playcount"></span> scrobbles
+                                <span class="mx-2">•</span>
+                                <i class="bi bi-calendar me-1"></i>
+                                Member since <span id="user-registered"></span>
+                            </p>
+                        </div>
+                    </div>
+                    <p class="lead mb-0">Ready to discover and scrobble more music?</p>
+                </div>
+                <button id="refresh-artwork-btn" class="refresh-artwork-btn" title="Refresh album artwork from latest scrobble">
+                    <i class="bi bi-arrow-clockwise"></i>
+                </button>
             </div>
 
             <!-- Search Section -->
