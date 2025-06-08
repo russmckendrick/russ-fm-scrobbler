@@ -1,13 +1,13 @@
 # Russ FM Scrobbler
 
-A web application for searching albums on Discogs and scrobbling them to Last.fm. Built with Cloudflare Workers and featuring a brutalist design aesthetic.
+A web application for searching albums on Discogs and scrobbling them to Last.fm. Built with Cloudflare Workers and featuring a functional and minimalist design aesthetic.
 
 ## Features
 
 - **LastFM Authentication**: Secure OAuth integration with session management
 - **Discogs Search**: Search by release ID or artist/album name
 - **Scrobbling**: Individual track or full album scrobbling to Last.fm
-- **Responsive Design**: Clean, brutalist interface that works on all devices
+- **Responsive Design**: Clean, functional interface that works on all devices
 - **Fast Performance**: Powered by Cloudflare Workers edge computing
 
 ## Prerequisites
@@ -112,8 +112,10 @@ npm run deploy
 - `POST /api/auth/logout` - Logout user
 
 ### Search
-- `GET /api/search/discogs` - Search Discogs database
-- `GET /api/search/discogs/release/{id}` - Get release details
+- `GET /api/search/discogs` - Search Discogs database (supports `releaseId` or `artist` & `album` query params)
+- `GET /api/search/discogs/release/{id}` - Get Discogs release details
+- `GET /api/search/lastfm` - Search Last.fm (supports `artist`, `album`, or `track` query params)
+- `GET /api/search/lastfm/album` - Get Last.fm album details (supports `artist` & `album` query params)
 
 ### Scrobbling
 - `POST /api/scrobble/track` - Scrobble single track
@@ -133,7 +135,7 @@ src/
 │   └── lastfm.js         # Last.fm utilities
 └── static/
     ├── index.html.js     # Main HTML template
-    ├── styles.css.js     # Brutalist CSS styles
+    ├── styles.css.js     # Core CSS styles
     └── script.js.js      # Frontend JavaScript
 ```
 
@@ -174,4 +176,3 @@ For issues and questions:
 - **Last.fm** for the scrobbling API
 - **Discogs** for the music database API
 - **Cloudflare** for the Workers platform
-- Inspired by the brutalist design aesthetic

@@ -3,21 +3,40 @@ import { handleSearch } from './handlers/search.js';
 import { handleScrobble } from './handlers/scrobble.js';
 import { getStaticAsset } from './utils/static.js';
 
+const ALLOWED_ORIGINS = [
+  'http://localhost:8787',
+  'https://scrobbler.russ.fm',
+  'https://random.russ.fm',
+  'https://www.russ.fm',
+  'https://russ.fm',
+];
+
 export default {
   async fetch(request, env, ctx) {
     const url = new URL(request.url);
     const path = url.pathname;
 
-    // CORS headers for all responses
-    const corsHeaders = {
-      'Access-Control-Allow-Origin': '*',
+    const requestOrigin = request.headers.get('Origin');
+
+    // Base CORS headers (excluding ACAO and Vary initially)
+    const responseCorsHeaders = {
       'Access-Control-Allow-Methods': 'GET, POST, OPTIONS',
       'Access-Control-Allow-Headers': 'Content-Type, Authorization',
     };
 
-    // Handle preflight requests
+    // Conditionally set ACAO and Vary
+    if (requestOrigin && ALLOWED_ORIGINS.includes(requestOrigin)) {
+      responseCorsHeaders['Access-Control-Allow-Origin'] = requestOrigin;
+      responseCorsHeaders['Vary'] = 'Origin'; // Important for caching
+    }
+    // If requestOrigin is not in ALLOWED_ORIGINS, ACAO is not set.
+    // Browsers will block disallowed cross-origin requests.
+    // For same-origin or non-browser requests (Origin header not present), ACAO is also not set.
+
+    // Handle preflight (OPTIONS) requests
     if (request.method === 'OPTIONS') {
-      return new Response(null, { headers: corsHeaders });
+      // Preflight response should include ACAO if origin is allowed
+      return new Response(null, { headers: responseCorsHeaders });
     }
 
     try {
@@ -35,8 +54,8 @@ export default {
           response = new Response('API endpoint not found', { status: 404 });
         }
 
-        // Add CORS headers to API responses
-        Object.entries(corsHeaders).forEach(([key, value]) => {
+        // Add CORS headers to the actual response
+        Object.entries(responseCorsHeaders).forEach(([key, value]) => {
           response.headers.set(key, value);
         });
         
@@ -44,13 +63,17 @@ export default {
       }
 
       // Static file serving
-      return await getStaticAsset(path, env);
+      const staticAssetResponse = await getStaticAsset(path, env);
+      Object.entries(responseCorsHeaders).forEach(([key, value]) => {
+        staticAssetResponse.headers.set(key, value);
+      });
+      return staticAssetResponse;
 
     } catch (error) {
       console.error('Worker error:', error);
       return new Response('Internal Server Error', { 
         status: 500,
-        headers: corsHeaders
+        headers: responseCorsHeaders // Use the dynamically built CORS headers
       });
     }
   },
