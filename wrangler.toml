@@ -7,7 +7,7 @@ name = "russ-fm-scrobbler"
 route = "scrobbler.russ.fm/*"
 [env.production.vars]
 ENVIRONMENT = "production"
-ALLOWED_ORIGINS_STRING = "https://scrobbler.russ.fm,https://random.russ.fm,https://www.russ.fm,https://russ.fm"
+ALLOWED_ORIGINS_STRING = "https://scrobbler.russ.fm,https://random.russ.fm,https://www.russ.fm,https://russ.fm,http://localhost:5173"
 
 [env.development]
 name = "russ-fm-scrobbler-dev"
